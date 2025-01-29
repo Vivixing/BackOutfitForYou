@@ -1,21 +1,24 @@
+from pymongo.mongo_client import MongoClient
 from dotenv import load_dotenv
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 
+#Cargar las variables de entorno
 load_dotenv()
 
+# Obtener la URI de la base de datos de las variables de entorno
 MONGO_URI = os.getenv("MONGO_URI")
-DATABASE_NAME = "oufitForYou"
 
-#Cliente Mongo
-client = AsyncIOMotorClient(MONGO_URI)
-database = client[DATABASE_NAME]
+# Crear una instancia de MongoClient
+client = MongoClient(MONGO_URI)
 
-#Colecciones
-usuario_collection = database.get_collection("usuario")
-prenda_collection = database.get_collection("prenda")
-tipoPrenda_collection = database.get_collection("tipoPrenda")
-vestuario_collection = database.get_collection("vestuario")
-favorito_collection = database.get_collection("favorito")
-recomendacion_collection = database.get_collection("recomendacion")
-visualizacion_collection = database.get_collection("visualizacion")
+# Confirmar conexión a la base de datos
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
+
+
+
+
+
