@@ -11,6 +11,18 @@ MONGO_URI = os.getenv("MONGO_URI")
 # Crear una instancia de MongoClient
 client = MongoClient(MONGO_URI)
 
+db = client['oufitForYou']
+
+# Crear las colecciones
+userCollection = db['Usuario']
+clotheCollection = db['Prenda']
+clothingTypeCollection = db['TipoPrenda']
+outfitCollection = db['Vestuario']
+favoriteCollection = db['Favorito']
+recommendationCollection = db['Recomendacion']
+visualizationCollection = db['Visualizacion']
+
+
 # Confirmar conexión a la base de datos
 try:
     client.admin.command('ping')
