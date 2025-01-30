@@ -4,7 +4,6 @@ from pydantic import EmailStr
 from models.PrendaModel import Prenda
 from models.FavoritoModel import Favorito
 
-
 class Usuario(Document):
     nombre: str
     email: EmailStr

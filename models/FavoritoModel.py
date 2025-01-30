@@ -1,7 +1,7 @@
 from beanie import Document, Link
 from datetime import datetime
 from typing import List
-from models.UsuarioModel import Usuario
+from models.UsuarioModel import Usuario 
 from models.VestuarioModel import Vestuario
 
 class Favorito(Document):
