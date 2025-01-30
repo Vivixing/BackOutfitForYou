@@ -1,13 +1,18 @@
 from beanie import Document, Link
+from pydantic import BaseModel
 from datetime import datetime
 from typing import List
-from models.UsuarioModel import Usuario 
-from models.VestuarioModel import Vestuario
+from .UsuarioModel import UsuarioModel
+from .VestuarioModel import VestuarioModel
 
-class Favorito(Document):
-    usuarioId: Link[Usuario]
-    vestuarioId: List[Link[Vestuario]]=[]
+class FavoritoModel(BaseModel):
+    usuarioId: str 
+    vestuarioId: List[str] = []
     fechaCreado: datetime
 
     class Settings:
         collection = "favoritos"
+
+class Favorito(FavoritoModel, Document):
+    usuarioId: Link[UsuarioModel]  
+    vestuarioId: List[Link[VestuarioModel]]  

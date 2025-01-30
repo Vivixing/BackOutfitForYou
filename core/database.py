@@ -22,18 +22,21 @@ async def init_db():
 
     db = client['oufitForYou']
 
-    # Crear las colecciones
-    await init_beanie(
-        database=db,
-        document_models=[Usuario, Prenda, TipoPrenda, Vestuario, Favorito, Recomendacion, Visualizacion]
-    )
-
     # Confirmar conexión a la base de datos
     try:
         client.admin.command('ping')
         print("Pinged your deployment. You successfully connected to MongoDB!")
+        # Crear las colecciones
+        await init_beanie(
+            database=db,
+            document_models=[Usuario, Prenda, TipoPrenda, Vestuario, Favorito, Recomendacion, Visualizacion]
+        )
+        print("Colecciones creadas")
     except Exception as e:
         print(e)
+
+    
+    
 
 
 

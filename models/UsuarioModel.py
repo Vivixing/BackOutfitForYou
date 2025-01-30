@@ -1,15 +1,13 @@
-from beanie import Document, Link
-from typing import List
-from pydantic import EmailStr
-from models.PrendaModel import Prenda
-from models.FavoritoModel import Favorito
+from beanie import Document
+from pydantic import EmailStr, BaseModel
 
-class Usuario(Document):
+class UsuarioModel(BaseModel):
     nombre: str
     email: EmailStr
     contrasena: str
-    closet: List[Link[Prenda]]=[]
-    favoritos: List[Link[Favorito]]=[]
 
     class Settings:
         collection = "usuarios"
+
+class Usuario(UsuarioModel, Document):
+    pass

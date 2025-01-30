@@ -1,14 +1,19 @@
 from typing import List
 from beanie import Document, Link
+from pydantic import BaseModel
 from datetime import datetime
-from models.UsuarioModel import Usuario
-from models.VestuarioModel import Vestuario
+from .UsuarioModel import UsuarioModel
+from .VestuarioModel import VestuarioModel
 
-class Visualizacion(Document):
-    usuarioId: Link[Usuario]
-    vestuarioId: List[Link[Vestuario]]=[]
+class VisualizacionModel(BaseModel):
+    usuarioId: str
+    vestuarioId: List[str]=[]
     imagen: str
     fechaCreado: datetime
 
     class Settings:
         collection = "visualizaciones"
+
+class Visualizacion(VisualizacionModel, Document):
+    usuarioId: Link[UsuarioModel]
+    vestuarioId: List[Link[VestuarioModel]]=[]
