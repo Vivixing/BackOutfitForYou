@@ -4,6 +4,7 @@ from datetime import datetime
 from models.UsuarioModel import Usuario
 from models.VestuarioModel import Vestuario
 
+
 class Recomendacion(Document):
     usuarioId: Link[Usuario]
     ocasion: str
