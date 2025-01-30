@@ -1,15 +1,19 @@
 from beanie import Document, Link
+from pydantic import BaseModel
 from typing import List
 from datetime import datetime
-from models.UsuarioModel import Usuario
-from models.VestuarioModel import Vestuario
+from .UsuarioModel import UsuarioModel
+from .VestuarioModel import VestuarioModel
 
-
-class Recomendacion(Document):
-    usuarioId: Link[Usuario]
+class RecomendacionModel(BaseModel):
+    usuarioId: str
     ocasion: str
-    vestuarioSugerido: List[Link[Vestuario]]=[]
+    vestuarioSugerido: List[str] = []
     fechaCreado: datetime
 
     class Settings:
         collection = "recomendaciones"
+
+class Recomendacion(RecomendacionModel,Document):
+    usuarioId: Link[UsuarioModel]
+    vestuarioSugerido: List[Link[VestuarioModel]]=[]
