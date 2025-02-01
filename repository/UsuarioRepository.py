@@ -1,5 +1,6 @@
 from models.UsuarioModel import Usuario
 from beanie import PydanticObjectId
+from pydantic import EmailStr
 
 class UsuarioRepository:
 
@@ -8,7 +9,11 @@ class UsuarioRepository:
         return await new_user.insert()
     
     @staticmethod
-    async def find_user_by_email(email: str) -> Usuario:
+    async def find_user_by_name(name: str) -> Usuario:
+        return await Usuario.find_one(Usuario.nombre == name)
+    
+    @staticmethod
+    async def find_user_by_email(email: EmailStr) -> Usuario:
         return await Usuario.find_one(Usuario.email == email)
     
     @staticmethod
