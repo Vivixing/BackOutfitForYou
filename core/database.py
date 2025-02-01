@@ -20,7 +20,7 @@ async def init_db():
     # Crear una instancia de MongoClient
     client = AsyncIOMotorClient(MONGO_URI)
 
-    db = client['oufitForYou']
+    db = client["oufitForYou"]
 
     # Confirmar conexión a la base de datos
     try:

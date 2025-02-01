@@ -1,4 +1,5 @@
 from services.UsuarioService import UsuarioService
+from models.UsuarioModel import Usuario
 from schemas.UsuarioSchema import UsuarioCreadoRequest, UsuarioLoginRequest
 from fastapi import HTTPException
 from beanie import PydanticObjectId
@@ -8,7 +9,9 @@ class UsuarioController:
     @staticmethod
     async def create_user(request:UsuarioCreadoRequest):
         try:
-            user = await UsuarioService.create_user(request)
+            #Convertir el request de un BaseModel a un objeto de tipo Usuario (Document)
+            user_convert = Usuario(**request.dict())  
+            user = await UsuarioService.create_user(user_convert)
             return {"status": 200, "message": "Usuario creado correctamente", "user_id":str(user.id), "data": user}
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
