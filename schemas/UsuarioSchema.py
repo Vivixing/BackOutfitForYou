@@ -40,6 +40,20 @@ class UsuarioCreadoRequest(BaseModel):
         return value
 
 class UsuarioLoginRequest(BaseModel):
-    email: EmailStr
-    contrasena: str
+    email: EmailStr = Field(...)
+    contrasena: str = Field(..., min_length=8, max_length=30)
+
+    @field_validator("email", mode="before")
+    def email_validator(cls, value):
+        if " " in value:
+            raise HTTPException(status_code=422, detail="El email no debe contener espacios")
+        return value.strip().lower()
+    
+    @field_validator("contrasena", mode="before")
+    def contrasena_validator(cls, value):
+        if len(value) < 8:
+            raise HTTPException(status_code=422, detail="La contraseña debe tener al menos 8 caracteres")
+        if len(value) > 30:
+            raise HTTPException(status_code=422, detail="La contraseña no puede tener más de 30 caracteres")
+        return value
 
