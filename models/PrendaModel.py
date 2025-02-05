@@ -1,4 +1,4 @@
-from beanie import Document, Link
+from beanie import Document, Link, PydanticObjectId
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
@@ -6,8 +6,8 @@ from .TipoPrendaModel import TipoPrendaModel
 from .UsuarioModel import UsuarioModel
 
 class PrendaModel(BaseModel):
-    usuarioId: str
-    tipoPrendaId: str
+    usuarioId: PydanticObjectId
+    tipoPrendaId: PydanticObjectId
     nombre: str
     color: Optional[str]
     imagen: str
