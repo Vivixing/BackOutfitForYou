@@ -1,7 +1,7 @@
 from beanie import PydanticObjectId
 from models.TipoPrendaModel import TipoPrenda
 
-class TipoPrensaRepository:
+class TipoPrendaRepository:
 
     @staticmethod
     async def create_tipo_prenda(new_tipo_prenda: TipoPrenda) -> TipoPrenda:
