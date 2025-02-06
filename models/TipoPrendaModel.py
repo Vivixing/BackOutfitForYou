@@ -1,10 +1,11 @@
+from datetime import datetime
 from beanie import Document
-from typing import Optional
 from pydantic import BaseModel
 
 class TipoPrendaModel(BaseModel):
-    tipo: str
-    categoria: Optional[str]
+    categoria: str
+    fechaCreado: datetime
+    fechaModificado: datetime
 
     class Settings:
         collection = "tipos_prendas"
