@@ -1,12 +1,11 @@
-
 import datetime
+from enums.CategoriaEnums import CategoriaEnums
 from pydantic import BaseModel, Field, field_validator
 
-
 class TipoPrendaCreadoRequest(BaseModel):
-    categoria: str = Field(..., min_length=2, max_length=30)
-    fecha_creacion = datetime.datetime.now()
+    categoria: CategoriaEnums = Field(...)
+    fecha_creacion = Field(default_factory=datetime.datetime.now)
 
 class TipoPrendaActualizadoRequest(BaseModel):
-    categoria: str = Field(..., min_length=2, max_length=30)
-    fecha_modificacion = datetime.datetime.now()
+    categoria: CategoriaEnums = Field(...)
+    fecha_modificacion = Field(default_factory=datetime.datetime.now)
