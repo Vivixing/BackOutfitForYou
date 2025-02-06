@@ -26,7 +26,7 @@ class PrendaController:
     @staticmethod
     async def get_prendas_by_user(user_id:PydanticObjectId):
         try:
-            prendas = await PrendaService.find_prendas_by_user(user_id)
+            prendas = await PrendaService.find_prenda_by_usuario_id(user_id)
             return {"status": 200, "message": "Prendas encontradas", "data": prendas}
         except Exception as e:
             raise HTTPException(status_code=404, detail=str(e))
@@ -34,7 +34,7 @@ class PrendaController:
     @staticmethod
     async def get_prendas_by_tipo_prenda(tipo_prenda_id:PydanticObjectId):
         try:
-            prendas = await PrendaService.find_prendas_by_tipo_prenda(tipo_prenda_id)
+            prendas = await PrendaService.find_prenda_by_tipo_prenda_id(tipo_prenda_id)
             return {"status": 200, "message": "Prendas encontradas", "data": prendas}
         except Exception as e:
             raise HTTPException(status_code=404, detail=str(e))

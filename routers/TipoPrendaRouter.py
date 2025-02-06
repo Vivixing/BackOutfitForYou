@@ -3,7 +3,7 @@ from schemas.TipoPrendaSchema import TipoPrendaCreadoRequest, TipoPrendaActualiz
 from controllers.TipoPrendaController import TipoPrendaController
 from fastapi import APIRouter
 
-routerTipoPrenda = APIRouter(prefix="/clothes", tags=["Prenda"])
+routerTipoPrenda = APIRouter(prefix="/type_of_clothing", tags=["TipoPrenda"])
 
 @routerTipoPrenda.post("/create")
 async def create_tipo_prenda(request:TipoPrendaCreadoRequest):
@@ -21,6 +21,6 @@ async def get_all_tipo_prendas():
 async def update_tipo_prenda(request:TipoPrendaActualizadoRequest):
     return await TipoPrendaController.update_tipo_prenda(request)
 
-@routerTipoPrenda.get("/get-by-category/{category}")
+@routerTipoPrenda.get("/get_by_category/{category}")
 async def get_tipo_prenda_by_name(category:str):
     return await TipoPrendaController.get_tipo_prenda_by_category(category)
