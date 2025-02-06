@@ -1,6 +1,6 @@
 import datetime
 from enums.CategoriaEnums import CategoriaEnums
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 class TipoPrendaCreadoRequest(BaseModel):
     categoria: CategoriaEnums = Field(...)
