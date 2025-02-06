@@ -35,3 +35,10 @@ class TipoPrendaController:
             return {"status": 200, "message": "Tipo de prenda actualizado correctamente", "tipo_prenda_id":str(tipo_prenda.id), "data": tipo_prenda}
         except Exception as e:
             raise HTTPException(status_code=404, detail=str(e))
+        
+    async def get_tipo_prenda_by_category(category:str):
+        try:
+            tipo_prenda = await TipoPrendaService.find_tipo_prenda_by_category(category)
+            return {"status": 200, "message": "Tipo de prenda encontrado", "data": tipo_prenda}
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=str(e))
