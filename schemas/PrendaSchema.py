@@ -1,5 +1,5 @@
 
-from datetime import datetime
+import datetime
 from typing import Optional
 from beanie import PydanticObjectId
 from pydantic import BaseModel, Field, field_validator
@@ -11,7 +11,7 @@ class PrendaCreadoRequest(BaseModel):
     nombre: str = Field(..., min_length=3, max_length=30)
     color: Optional[str] = Field(..., min_length=3, max_length=20)
     imagen: str = Field(..., min_length=5, max_length=200)
-    fechaCreado = Field(default_factory=datetime.datetime.now)
+    fechaCreado:  datetime.datetime = Field(default_factory=datetime.datetime.now)
 
     @field_validator("nombre", mode="before")
     def validar_nombre(cls, nombre_prenda):
@@ -46,7 +46,7 @@ class PrendaCreadoRequest(BaseModel):
 class PrendaActualizadoRequest(BaseModel):
     nombre: str = Field(..., min_length=3, max_length=30)
     color: Optional[str] = Field(..., min_length=3, max_length=20)
-    fechaActualizado = Field(default_factory=datetime.datetime.now)
+    fechaActualizado: datetime.datetime = Field(default_factory=datetime.datetime.now)
 
     @field_validator("nombre", mode="before")
     def validar_nombre(cls, nombre_prenda):
