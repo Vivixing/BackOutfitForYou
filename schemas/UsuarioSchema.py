@@ -5,7 +5,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 class UsuarioCreadoRequest(BaseModel):
     nombre: str = Field(..., min_length=2, max_length=30)
     email: EmailStr = Field(...)
-    contrasena: str = Field(..., pattern=r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]$", min_length=8, max_length=30)
+    contrasena: str = Field(..., min_length=8, max_length=30)
 
     @field_validator("nombre", mode="before")
     def nombre_validator(cls, value):
