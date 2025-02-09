@@ -10,7 +10,7 @@ class UsuarioController:
     async def create_user(request:UsuarioCreadoRequest):
         try:
             #Convertir el request de un BaseModel a un objeto de tipo Usuario (Document)
-            user_convert = Usuario(**request.dict())  
+            user_convert = Usuario(**request.dict())
             user = await UsuarioService.create_user(user_convert)
             return {"status": 200, "message": "Usuario creado correctamente", "user_id":str(user.id), "data": user}
         except Exception as e:

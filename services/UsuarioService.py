@@ -7,7 +7,7 @@ class UsuarioService:
     
     @staticmethod
     async def create_user(new_user: Usuario) -> Usuario:
-        exist_name = await UsuarioRepository.find_user_by_name(new_user.nombre)
+        exist_name = await UsuarioRepository.find_user_by_name(new_user.nombre)   
         if exist_name:
             raise Exception("Ya existe un usuario con ese nombre")
         exist_email = await UsuarioRepository.find_user_by_email(new_user.email)
@@ -25,7 +25,6 @@ class UsuarioService:
     @staticmethod
     async def find_user_by_id(user_id: PydanticObjectId) -> Usuario:
         exist_user_id = await UsuarioRepository.find_user_by_id(user_id)
-        print(exist_user_id)
         if not exist_user_id:
             raise Exception("No exite un usuario con ese ID")
         return exist_user_id
