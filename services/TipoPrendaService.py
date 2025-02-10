@@ -19,7 +19,7 @@ class TipoPrendaService:
             raise error
     
     @staticmethod
-    async def find_tipo_prenda_by_category(categoria: str) -> TipoPrenda:
+    async def find_tipo_prenda_by_category(categoria: str) -> list[TipoPrenda]:
         try:
             exist_tipo_prenda = await TipoPrendaRepository.find_tipo_prenda_by_category(categoria)
             if not exist_tipo_prenda:
@@ -30,7 +30,13 @@ class TipoPrendaService:
     
     @staticmethod
     async def find_all_tipo_prendas() -> list[TipoPrenda]:
-        return await TipoPrendaRepository.find_all_tipo_prendas()
+        try:
+            tipo_prendas = await TipoPrendaRepository.find_all_tipo_prendas()
+            if not tipo_prendas:
+                raise Exception("No existen tipos de prendas registradas")
+            return tipo_prendas
+        except Exception as error:
+            raise error
     
     @staticmethod
     async def uptade_tipo_prenda(update_tipo_prenda: TipoPrenda) -> TipoPrenda:
@@ -38,6 +44,6 @@ class TipoPrendaService:
             exist_tipo_prenda = await TipoPrendaRepository.find_tipo_prenda_by_id(update_tipo_prenda.id)
             if not exist_tipo_prenda:
                 raise Exception("No exite un tipo de prenda con ese ID")
-            return await TipoPrendaRepository.create_tipo_prenda(update_tipo_prenda)
+            return await TipoPrendaRepository.update_tipo_prenda(update_tipo_prenda)
         except Exception as error:
             raise error

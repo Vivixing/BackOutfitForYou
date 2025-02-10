@@ -24,13 +24,13 @@ class TipoPrendaController:
     async def get_all_tipo_prendas():
         try:
             tipo_prendas = await TipoPrendaService.find_all_tipo_prendas()
-            return {"status": 200, "message": "Tipos de prendas encontrados", "data": tipo_prendas}
+            return {"status": 200, "message": f"Tipos de prendas encontrados {len(tipo_prendas)}", "data": tipo_prendas}
         except Exception as e:
             raise HTTPException(status_code=404, detail=str(e))
     
-    async def update_tipo_prenda(request:TipoPrendaActualizadoRequest):
+    async def update_tipo_prenda(id:PydanticObjectId, request:TipoPrendaActualizadoRequest):
         try:
-            tipo_prenda_convert = TipoPrenda(**request.dict())
+            tipo_prenda_convert = TipoPrenda(**request.dict(), id=id)
             tipo_prenda = await TipoPrendaService.uptade_tipo_prenda(tipo_prenda_convert)
             return {"status": 200, "message": "Tipo de prenda actualizado correctamente", "tipo_prenda_id":str(tipo_prenda.id), "data": tipo_prenda}
         except Exception as e:
@@ -39,6 +39,6 @@ class TipoPrendaController:
     async def get_tipo_prenda_by_category(category:str):
         try:
             tipo_prenda = await TipoPrendaService.find_tipo_prenda_by_category(category)
-            return {"status": 200, "message": "Tipo de prenda encontrado", "data": tipo_prenda}
+            return {"status": 200, "message": f"Se encontraron {len(tipo_prenda)} prendas", "data": tipo_prenda}
         except Exception as e:
             raise HTTPException(status_code=404, detail=str(e))
