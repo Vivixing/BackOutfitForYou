@@ -1,4 +1,5 @@
 
+from typing import Optional
 from models.PrendaModel import Prenda
 from repository.PrendaRepository import PrendaRepository
 from beanie import PydanticObjectId
@@ -20,27 +21,27 @@ class PrendaService:
             raise error
     
     @staticmethod
-    async def find_prenda_by_usuario_id(usuario_id: PydanticObjectId) -> Prenda:
+    async def find_prenda_by_usuario_id(usuario_id: PydanticObjectId) -> list[Prenda]:
         try: 
             exist_prenda_usuario_id = await PrendaRepository.find_prenda_by_usuario_id(usuario_id)
             if not exist_prenda_usuario_id:
-                raise Exception("No existe una prenda con ese usuario ID")
+                raise Exception("No existen prendas asociadas a ese usuario ID")
             return exist_prenda_usuario_id
         except Exception as error:
             raise error
     
     @staticmethod
-    async def find_prenda_by_tipo_prenda_id(tipo_prenda_id: PydanticObjectId) -> Prenda:
+    async def find_prenda_by_tipo_prenda_id(tipo_prenda_id: PydanticObjectId) -> list[Prenda]:
         try:
             exist_prenda_tipo_prenda_id = await PrendaRepository.find_prenda_by_tipo_prenda_id(tipo_prenda_id)
             if not exist_prenda_tipo_prenda_id:
-                raise Exception("No existe una prenda con ese tipo de prenda ID")
+                raise Exception("No existen una prendas asociadas a ese tipo de prenda ID")
             return exist_prenda_tipo_prenda_id
         except Exception as error:
             raise error
     
     @staticmethod
-    async def find_prenda_by_name(name: str) -> Prenda:
+    async def find_prenda_by_name(name: str) -> list[Prenda]:
         try: 
             exist_prenda_name = await PrendaRepository.find_prenda_by_name(name)
             if not exist_prenda_name:
@@ -50,7 +51,7 @@ class PrendaService:
             raise error
     
     @staticmethod
-    async def delete_prenda(id: PydanticObjectId) -> Prenda:
+    async def delete_prenda(id: PydanticObjectId) -> Optional[Prenda]:
         try: 
             exist_prenda_id = await PrendaRepository.find_prenda_by_id(id)
             if not exist_prenda_id:
@@ -61,14 +62,21 @@ class PrendaService:
     
     @staticmethod
     async def find_all_prendas() -> list[Prenda]:
-        return await PrendaRepository.find_all_prendas().to_list()
+        try:
+            prendas = await PrendaRepository.find_all_prendas()
+            if not prendas:
+                raise Exception("No existen prendas registradas")
+            return prendas
+        except Exception as error:
+            raise error
     
     @staticmethod
-    async def update_prenda(update_prenda: Prenda) -> Prenda:
+    async def update_prenda(id: PydanticObjectId, update_prenda: dict) -> Prenda:
         try:
-            exist_prenda = await PrendaRepository.find_prenda_by_id(update_prenda.id)
+            exist_prenda = await PrendaRepository.find_prenda_by_id(id)
             if not exist_prenda:
                 raise Exception("No existe una prenda con ese ID")
-            return await PrendaRepository.create_prenda(update_prenda)
+            
+            return await PrendaRepository.update_prenda(id, update_prenda)
         except Exception as error:
             raise error
