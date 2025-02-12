@@ -1,17 +1,40 @@
+import datetime
 from beanie import PydanticObjectId
 from models.PrendaModel import Prenda
-from schemas.PrendaSchema import PrendaCreadoRequest
+from services.UsuarioService import UsuarioService
+from services.TipoPrendaService import TipoPrendaService
+from schemas.PrendaSchema import PrendaCreadoRequest, PrendaActualizadoRequest
 from services.PrendaService import PrendaService
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
+import base64
 
 class PrendaController:
 
     @staticmethod
-    async def create_prenda(request:PrendaCreadoRequest):
+    async def create_prenda(request:PrendaCreadoRequest, imagen:UploadFile):
         try:
-            prenda_convert = Prenda(**request.dict())  
+            #Convertir imagen a bytes
+            imagen_bytes = await imagen.read()
+            imagen_base64 = base64.b64encode(imagen_bytes).decode("utf-8")
+
+            usuario = await UsuarioService.find_user_by_id(PydanticObjectId(request.usuarioId))
+            tipo_prenda = await TipoPrendaService.find_tipo_prenda_by_id(PydanticObjectId(request.tipoPrendaId))
+            
+            prenda_convert = Prenda(
+                usuarioId=usuario,
+                tipoPrendaId=tipo_prenda,
+                nombre=request.nombre,
+                color=request.color,
+                imagen=imagen_base64,
+                fechaCreado=datetime.datetime.now(),
+                fechaModificado=datetime.datetime.now(),
+                estado=True
+            )
+
             prenda = await PrendaService.create_prenda(prenda_convert)
-            return {"status": 200, "message": "Prenda creada correctamente", "prenda_id":str(prenda.id), "data": prenda}
+
+            return {"status": 200, "message": "Prenda creada correctamente", "id_Prenda": prenda.id, "data": prenda}
+        
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
     
@@ -51,15 +74,19 @@ class PrendaController:
     async def get_all_prendas():
         try:
             prendas = await PrendaService.find_all_prendas()
-            return {"status": 200, "message": "Prendas encontradas", "data": prendas}
+            return {"status": 200, "message": f"Prendas encontradas {len(prendas)}", "data": prendas}
         except Exception as e:
             raise HTTPException(status_code=404, detail=str(e))
     
     @staticmethod
-    async def update_prenda(request:PrendaCreadoRequest):
+    async def update_prenda(id:PydanticObjectId, request:PrendaActualizadoRequest):
         try:
-            prenda_convert = Prenda(**request.dict())  
-            prenda = await PrendaService.update_prenda(prenda_convert)
+            update_data = request.dict(exclude_unset=True)
+
+            if not update_data:
+                raise HTTPException(status_code=400, detail="No se enviaron campos para actualizar")
+             
+            prenda = await PrendaService.update_prenda(id, update_data)
             return {"status": 200, "message": "Prenda actualizada correctamente", "prenda_id":str(prenda.id), "data": prenda}
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
@@ -68,6 +95,8 @@ class PrendaController:
     async def delete_prenda(prenda_id:PydanticObjectId):
         try:
             prenda = await PrendaService.delete_prenda(prenda_id)
-            return {"status": 200, "message": "Prenda eliminada correctamente", "prenda_id":str(prenda.id), "data": prenda}
+            return {"status": 200, "message": "Prenda marcada como inactiva","data": prenda}
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             raise HTTPException(status_code=404, detail=str(e))
