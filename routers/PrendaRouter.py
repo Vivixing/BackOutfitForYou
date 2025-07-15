@@ -5,9 +5,13 @@ from fastapi import APIRouter, Depends, File, UploadFile
 
 routerPrenda = APIRouter(prefix="/clothe", tags=["Prenda"])
 
+@routerPrenda.post("/predict_name")
+async def predict_prenda(imagen: UploadFile = File(...)):
+    return await PrendaController.predict_prenda(imagen)
+
 @routerPrenda.post("/create")
-async def create_prenda(request: PrendaCreadoRequest = Depends(), imagen: UploadFile = File(...)):
-    return await PrendaController.create_prenda(request, imagen)
+async def create_prenda(request: PrendaCreadoRequest = Depends()):
+    return await PrendaController.create_prenda(request)
 
 @routerPrenda.get("/get_all")
 async def get_all_prendas():
