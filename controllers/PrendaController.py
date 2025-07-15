@@ -1,5 +1,6 @@
 import datetime
 from beanie import PydanticObjectId
+from core.modelLoader import load_h5_model
 from models.PrendaModel import Prenda
 from services.UsuarioService import UsuarioService
 from services.TipoPrendaService import TipoPrendaService
@@ -11,21 +12,40 @@ import base64
 class PrendaController:
 
     @staticmethod
-    async def create_prenda(request:PrendaCreadoRequest, imagen:UploadFile):
+    async def predict_prenda(imagen: UploadFile):
         try:
-            #Convertir imagen a bytes
+            #Cargar el modelo una sola vez
+            model = load_h5_model()
+            #convertir imagen a bytes
             imagen_bytes = await imagen.read()
             imagen_base64 = base64.b64encode(imagen_bytes).decode("utf-8")
 
+            #Predicción con modelo
+            nombrePrenda_predicho = PrendaService.predict_model(model, imagen_base64)
+
+            return {
+            "status": 200,
+            "nombre_prenda_predicha": nombrePrenda_predicho,
+            "imagen_base64": imagen_base64  # Para que el cliente pueda enviarla en /create si quiere
+            }
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+
+    @staticmethod
+    async def create_prenda(request:PrendaCreadoRequest):
+        try:
             usuario = await UsuarioService.find_user_by_id(PydanticObjectId(request.usuarioId))
-            tipo_prenda = await TipoPrendaService.find_tipo_prenda_by_id(PydanticObjectId(request.tipoPrendaId))
-            
+            tipo_prenda = await TipoPrendaService.find_tipo_prenda_by_id(PydanticObjectId(request.tipoPrendaId)) 
+
+            nombrePrenda_usuario= request.nombre #Viene del cliente       
+
             prenda_convert = Prenda(
                 usuarioId=usuario,
                 tipoPrendaId=tipo_prenda,
-                nombre=request.nombre,
+                nombre=nombrePrenda_usuario,
                 color=request.color,
-                imagen=imagen_base64,
+                imagen=request.imagen_base64,
                 fechaCreado=datetime.datetime.now(),
                 fechaModificado=datetime.datetime.now(),
                 estado=True
@@ -33,10 +53,10 @@ class PrendaController:
 
             prenda = await PrendaService.create_prenda(prenda_convert)
 
-            return {"status": 200, "message": "Prenda creada correctamente", "id_Prenda": prenda.id, "data": prenda}
-        
+            return {"status": 200, "message": "Prenda creada correctamente", "id_Prenda": prenda.id, "nombre_predicho": nombrePrenda_usuario, "data": prenda}
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
+    
     
     @staticmethod
     async def get_prenda_by_id(prenda_id:PydanticObjectId):
