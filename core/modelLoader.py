@@ -2,7 +2,7 @@ from tensorflow import keras
 import asyncio
 
 def load_h5_model():
-    model = keras.models.load_model('deepLearning_model/cnn_model_v4.h5')
+    model = keras.models.load_model('deepLearningModel/cnn_model_v4.h5')
     return model
 
 async def load_h5_model_main():
