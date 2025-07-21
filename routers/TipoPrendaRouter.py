@@ -13,7 +13,11 @@ async def create_tipo_prenda(request:TipoPrendaCreadoRequest):
 async def get_all_tipo_prendas():
     return await TipoPrendaController.get_all_tipo_prendas()
 
-@routerTipoPrenda.get("/{tipo_prenda_id}")
+@routerTipoPrenda.get("/get_by_category/{category}")
+async def get_tipo_prenda_by_name(category:str):
+    return await TipoPrendaController.get_tipo_prenda_by_category(category)
+
+@routerTipoPrenda.get("/get_by_id/{tipo_prenda_id}")
 async def get_tipo_prenda_by_id(tipo_prenda_id:PydanticObjectId):
     return await TipoPrendaController.get_tipo_prenda_by_id(tipo_prenda_id)
 
@@ -21,6 +25,3 @@ async def get_tipo_prenda_by_id(tipo_prenda_id:PydanticObjectId):
 async def update_tipo_prenda(id:PydanticObjectId ,request:TipoPrendaActualizadoRequest):
     return await TipoPrendaController.update_tipo_prenda(id, request)
 
-@routerTipoPrenda.get("/get_by_category/{category}")
-async def get_tipo_prenda_by_name(category:str):
-    return await TipoPrendaController.get_tipo_prenda_by_category(category)

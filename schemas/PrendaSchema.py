@@ -9,6 +9,7 @@ class PrendaCreadoRequest(BaseModel):
     tipoPrendaId: PydanticObjectId = Field(...)
     nombre: str = Field(..., min_length=3, max_length=30)
     color: str = Field(..., min_length=3, max_length=20)
+    imagen_base64: str = Field(...)
 
     @field_validator("nombre", mode="before")
     def validar_nombre(cls, nombre_prenda):
@@ -29,6 +30,12 @@ class PrendaCreadoRequest(BaseModel):
         if len(color_prenda) > 20:
             raise HTTPException("Color de la prenda no puede tener más de 20 caracteres")
         return color_prenda
+    
+    @field_validator("imagen_base64", mode="before")
+    def validar_base64(cls,valor):
+        if valor is not None and not isinstance(valor, str):
+            raise HTTPException("El campo imagen_base64 debe ser una cadena en base64")
+        return valor
     
 class PrendaActualizadoRequest(BaseModel):
     nombre: Optional[str] = Field(None, min_length=3, max_length=30)

@@ -10,7 +10,7 @@ async def predict_prenda(imagen: UploadFile = File(...)):
     return await PrendaController.predict_prenda(imagen)
 
 @routerPrenda.post("/create")
-async def create_prenda(request: PrendaCreadoRequest = Depends()):
+async def create_prenda(request: PrendaCreadoRequest):
     return await PrendaController.create_prenda(request)
 
 @routerPrenda.get("/get_all")
@@ -22,8 +22,8 @@ async def get_prenda_by_id(prenda_id:PydanticObjectId):
     return await PrendaController.get_prenda_by_id(prenda_id)
 
 @routerPrenda.patch("/update/{prenda_id}")
-async def update_prenda(id:PydanticObjectId, request:PrendaActualizadoRequest):
-    return await PrendaController.update_prenda(id, request)
+async def update_prenda(prenda_id:PydanticObjectId, request:PrendaActualizadoRequest):
+    return await PrendaController.update_prenda(prenda_id, request)
 
 @routerPrenda.get("/get_by_user/{user_id}")
 async def get_prenda_by_user(user_id:PydanticObjectId):
