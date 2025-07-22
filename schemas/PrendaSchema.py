@@ -1,8 +1,11 @@
 import datetime
+import re
 from typing import Optional
 from beanie import PydanticObjectId
 from pydantic import BaseModel, Field, field_validator
 from fastapi import HTTPException
+
+hex_pattern = r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
 
 class PrendaCreadoRequest(BaseModel):
     usuarioId: PydanticObjectId = Field(...)
@@ -23,12 +26,18 @@ class PrendaCreadoRequest(BaseModel):
     
     @field_validator("color", mode="before")
     def validar_color(cls, color_prenda):
-        if not color_prenda.replace(" ", "").isalpha():
-            raise HTTPException("Color de la prenda no puede contener números ni caracteres especiales")
-        if len(color_prenda) < 3:
-            raise HTTPException("Color de la prenda debe de tener al menos 3 caracteres")
-        if len(color_prenda) > 20:
-            raise HTTPException("Color de la prenda no puede tener más de 20 caracteres")
+
+        if color_prenda is None:
+            return color_prenda
+        
+        if not isinstance(color_prenda, str):
+            raise HTTPException(status_code=400, detail="El color debe ser una cadena de texto")
+        
+        if not re.match(hex_pattern, color_prenda):
+            raise HTTPException(
+                status_code=400,
+                detail="Color debe estar en formato de código hexadecimal"
+            )
         return color_prenda
     
     @field_validator("imagen_base64", mode="before")
@@ -56,12 +65,16 @@ class PrendaActualizadoRequest(BaseModel):
     
     @field_validator("color", mode="before")
     def validar_color(cls, color_prenda):
+
         if color_prenda is None:
-            return color_prenda  # Si no se envía, no se valida
-        if not color_prenda.replace(" ", "").isalpha():
-            raise HTTPException(status_code=400, detail="Color de la prenda no puede contener números ni caracteres especiales")
-        if len(color_prenda) < 3:
-            raise HTTPException(status_code=400, detail="Color de la prenda debe tener al menos 3 caracteres")
-        if len(color_prenda) > 20:
-            raise HTTPException(status_code=400, detail="Color de la prenda no puede tener más de 20 caracteres")
+            return color_prenda
+        
+        if not isinstance(color_prenda, str):
+            raise HTTPException(status_code=400, detail="El color debe ser una cadena de texto")
+        
+        if not re.match(hex_pattern, color_prenda):
+            raise HTTPException(
+                status_code=400,
+                detail="Color debe estar en formato de código hexadecimal"
+            )
         return color_prenda

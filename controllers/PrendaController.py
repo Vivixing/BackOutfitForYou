@@ -23,9 +23,13 @@ class PrendaController:
             #Predicción con modelo
             nombrePrenda_predicho = PrendaService.predict_model(model, imagen_base64)
 
+            #Detectar color
+            color = PrendaService.obtener_color_predominante_prenda(imagen_base64)
+
             return {
             "status": 200,
             "nombre_prenda_predicha": nombrePrenda_predicho,
+            "color": color,
             "imagen_base64": imagen_base64  # Para que el cliente pueda enviarla en /create si quiere
             }
         except Exception as e:
@@ -38,12 +42,10 @@ class PrendaController:
             usuario = await UsuarioService.find_user_by_id(PydanticObjectId(request.usuarioId))
             tipo_prenda = await TipoPrendaService.find_tipo_prenda_by_id(PydanticObjectId(request.tipoPrendaId)) 
 
-            nombrePrenda_usuario= request.nombre #Viene del cliente       
-
             prenda_convert = Prenda(
                 usuarioId=usuario,
                 tipoPrendaId=tipo_prenda,
-                nombre=nombrePrenda_usuario,
+                nombre=request.nombre,
                 color=request.color,
                 imagen=request.imagen_base64,
                 fechaCreado=datetime.datetime.now(),
@@ -53,7 +55,7 @@ class PrendaController:
 
             prenda = await PrendaService.create_prenda(prenda_convert)
 
-            return {"status": 200, "message": "Prenda creada correctamente", "id_Prenda": prenda.id, "nombre_predicho": nombrePrenda_usuario, "data": prenda}
+            return {"status": 200, "message": "Prenda creada correctamente", "id_Prenda": prenda.id, "nombre_predicho": prenda.nombre, "color_detectado":prenda.color, "data": prenda}
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
     

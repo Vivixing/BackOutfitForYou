@@ -8,6 +8,7 @@ import numpy as np
 import base64
 from io import BytesIO
 from enums.PrendaCategoria import PrendaCategoria
+from colorthief import ColorThief
 
 class PrendaService:
 
@@ -46,6 +47,18 @@ class PrendaService:
         except Exception as e:
             raise RuntimeError(f"Error en la predicción: {e}")
 
+    @staticmethod
+    def obtener_color_predominante_prenda(image_base64:str) -> str:
+        try:
+            imagen_bytes = base64.b64decode(image_base64)
+            image_io = BytesIO(imagen_bytes)
+            color_thief = ColorThief(image_io)
+            color_rgb = color_thief.get_color(quality=1)
+            # Convertir RGB a formato HEX
+            color_hex = '#%02x%02x%02x' % color_rgb
+            return color_hex.upper()
+        except Exception as e:
+            raise RuntimeError(f"No se pudo detectar el color predominante de la prenda: {e}")
 
     @staticmethod
     async def create_prenda(new_prenda: Prenda) -> Prenda:
