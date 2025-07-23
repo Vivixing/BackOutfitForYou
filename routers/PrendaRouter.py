@@ -1,7 +1,7 @@
 from beanie import PydanticObjectId
 from controllers.PrendaController import PrendaController
 from schemas.PrendaSchema import PrendaActualizadoRequest, PrendaCreadoRequest
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, File, UploadFile
 
 routerPrenda = APIRouter(prefix="/clothe", tags=["Prenda"])
 
