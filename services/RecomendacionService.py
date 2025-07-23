@@ -1,6 +1,8 @@
+import datetime
 from services.PrendaService import PrendaService
 from repository.RecomendacionRepository import RecomendacionRepository
 from core.openAI import client
+from beanie import PydanticObjectId
 
 class RecomendacionService:
 
@@ -14,17 +16,19 @@ class RecomendacionService:
         
         # Crear prompt para OpenAI
         prompt = f"""Tú eres un asistente de moda. Un usuario describe la siguiente ocasión: "{ocasion}". 
-        A continuación tienes una lista de prendas disponibles para ese usuario. Elige **una prenda superior y una inferior** que combinen bien para la ocasión descrita. 
-        Solo responde con los nombres exactos de las prendas seleccionadas, separados por una coma. 
+        A continuación tienes una lista de prendas disponibles para ese usuario. Elige **una prenda superior y una inferior** considerando la ocasión y trata de combinar colores que armonicen visualmente para la ocasión descrita. 
+        Solo responde con los nombres exactos de las prendas seleccionadas, separados por una coma.
+ 
         Prendas superiores:
-        {chr(10).join(['- ' + p.nombre for p in prendas_superiores])}
+        {chr(10).join([f"- {p.nombre} ({p.color})" for p in prendas_superiores])}
+        
         Prendas inferiores:
-        {chr(10).join(['- ' + p.nombre for p in prendas_inferiores])}
+        {chr(10).join([f"- {p.nombre} ({p.color})" for p in prendas_inferiores])}
         Respuesta esperada (formato): Prenda superior, Prenda inferior
         """
 
         response = await client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Eres un asistente de moda experto."},
                 {"role": "user", "content": prompt}
@@ -45,8 +49,15 @@ class RecomendacionService:
         if not prenda_sup or not prenda_inf:
             raise ValueError("No se encontraron las prendas sugeridas.")
         
-        prendas_ids = [str(prenda_sup.id), str(prenda_inf.id)]
+        vestuario_ids = [str(prenda_sup.id), str(prenda_inf.id)]
+
+        recomendacion_obj = recomendacion(
+            usuarioId=PydanticObjectId(usuarioId),
+            ocasion=ocasion,
+            vestuarioSugerido=[PydanticObjectId(v_id) for v_id in vestuario_ids],
+            fechaCreado=datetime.now()
+        )
 
         # Guardar recomendación
-        recomendacion = await RecomendacionRepository.crear_recomendacion(usuarioId, ocasion, prendas_ids)
+        recomendacion = await RecomendacionRepository.crear_recomendacion(recomendacion_obj)
         return recomendacion
