@@ -4,6 +4,6 @@ from schemas.RecomendacionSchema import RecomendacionRequest, RecomendacionRespo
 
 routerRecomendacion = APIRouter(prefix="/recomendation", tags=["Recomendacion"])
 
-@routerRecomendacion.post("/recomendation")
+@routerRecomendacion.post("/recomendation_clothe")
 async def crear_recomendacion_vestimenta(request:RecomendacionRequest):
     return await RecomendacionController.crear_recomendacion(request)
