@@ -21,7 +21,7 @@ async def create_prenda(request: PrendaCreadoRequest):
 async def get_all_prendas():
     return await PrendaController.get_all_prendas()
 
-@routerPrenda.get("/{prenda_id}")
+@routerPrenda.get("/get_by_id/{prenda_id}")
 async def get_prenda_by_id(prenda_id:PydanticObjectId):
     return await PrendaController.get_prenda_by_id(prenda_id)
 

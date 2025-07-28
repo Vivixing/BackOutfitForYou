@@ -1,66 +1,96 @@
 import datetime
+from models.VestuarioModel import Vestuario
+from repository.VestuarioRepository import VestuarioRepository
 from services.PrendaService import PrendaService
 from models.RecomendacionModel import Recomendacion
 from repository.RecomendacionRepository import RecomendacionRepository
-from core.openAI import client
+from core.openAI import openai_client
 from beanie import PydanticObjectId
 
 class RecomendacionService:
 
     @staticmethod
-    async def generar_recomendacion(usuarioId: PydanticObjectId, ocasion: str) -> list[str]:
-        #Obtener prendas del usuario
-        prendas = await PrendaService.find_prenda_by_usuario_id(usuarioId)
-
-        # Separar superiores e inferiores
-        prendas_superiores = [p for p in prendas if p.tipoPrenda.lower() == "Superior"]
-        prendas_inferiores = [p for p in prendas if p.tipoPrenda.lower() == "Inferior"]
-        
-        # Crear prompt para OpenAI
-        prompt = f"""Tú eres un asistente de moda. Un usuario describe la siguiente ocasión: "{ocasion}". 
-        Estas son sus prendas disponibles. Elige **una prenda superior y una inferior** que combinen bien según la ocasión descrita.
-        Combina colores de manera adecuada. Solo responde con los nombres exactos, separados por una coma.
- 
-        Prendas superiores:
-        {chr(10).join([f"- {p.nombre} ({p.color})" for p in prendas_superiores])}
-        
-        Prendas inferiores:
-        {chr(10).join([f"- {p.nombre} ({p.color})" for p in prendas_inferiores])}
-
-        Respuesta esperada (formato): Prenda superior, Prenda inferior
+    async def prompt(prendas: list[str], ocasion: str) -> str:
+        lista_prendas = "\n".join([
+            f"- {p.nombre}, color {p.color}, categoría {p.tipoPrendaId.categoria}"
+            for p in prendas
+        ])
+        prompt = f"""Eres un asistente de moda.
+        Estas son las prendas disponibles del usuario:
+        {lista_prendas}
+        El usuario desea una recomendación de vestiario para la siguiente ocasión: "{ocasion}".
+        Elige **una prenda superior y una inferior** que combinen bien según la ocasión descrita.
+        Devuélveme solo los nombres exactos de las prendas seleccionadas.
         """
-
-        response = await client.chat.completions.create(
+        return prompt
+    
+    @staticmethod 
+    async def obtener_recomendacion(prompt: str):
+        response = await openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Eres un asistente de moda experto."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
         )
         contenido = response.choices[0].message.content.strip()
+        return contenido
+    
+    @staticmethod
+    async def obtener_prendas_usuario(usuarioId: PydanticObjectId, nombres:list[str]):  
+        # Obtener prendas del usuario
+        prendas = await PrendaService.find_prenda_by_usuario_id(usuarioId)
 
-        if "," in contenido:
-            sup, inf = [s.strip() for s in contenido.split(",", 1)]
-        else:
-            raise ValueError("La respuesta no tiene el formato correcto.")
-        
-        # Buscar esas prendas en la base de datos
-        prenda_sup = next((p for p in prendas_superiores if p.nombre == sup), None)
-        prenda_inf = next((p for p in prendas_inferiores if p.nombre == inf), None)
+        # Filtrar prendas por nombres
+        prendas_filtradas = [p for p in prendas if p.nombre in nombres]
 
-        if not prenda_sup or not prenda_inf:
-            raise ValueError("No se encontraron las prendas sugeridas.")
+        if not prendas_filtradas:
+            raise ValueError("No se encontraron prendas con los nombres proporcionados.")
         
-        vestuario_ids = [str(prenda_sup.id), str(prenda_inf.id)]
-        return vestuario_ids
+        return prendas_filtradas
+    
 
     @staticmethod
-    async def guardar_recomendacion(usuarioId:PydanticObjectId, ocasion:str , vestuarios_ids:list[str]):
-        recomendacion_obj = Recomendacion(
-            usuarioId=PydanticObjectId(usuarioId),
-            ocasion=ocasion,
-            vestuarioSugerido=[PydanticObjectId(v_id) for v_id in vestuarios_ids],
-            fechaCreado=datetime.now()
+    async def generar_recomendacion(usuarioId: PydanticObjectId, ocasion: str):
+       
+       prendas_usuario = await PrendaService.find_prenda_by_usuario_id(usuarioId)
+       prendas_activas = [p for p in prendas_usuario if p.estado == "true"]
+
+       prompt = await RecomendacionService.prompt(prendas_activas, ocasion)
+
+       respuesta = await RecomendacionService.obtener_recomendacion(prompt)
+       nombres_sugeridos = [line.strip("-•* ").strip() for line in respuesta.splitlines() if line.strip()]
+
+       prendas_sugeridas = await RecomendacionService.obtener_prendas_usuario(usuarioId, nombres_sugeridos)
+
+       vestuario = Vestuario(
+           usuarioId=usuarioId,
+           prendas=[p.id for p in prendas_sugeridas],
+           ocasion=ocasion,
+           fechaCreacion=datetime.datetime.now()
         )
-        return await RecomendacionRepository.create_recomendacion(recomendacion_obj)
+
+       await VestuarioRepository.create_vestuario(vestuario)
+
+       recomendacion = Recomendacion(
+           usuarioId=usuarioId,
+           ocasion=ocasion,
+           vestuarioSugerido=[p.id for p in prendas_sugeridas],
+           fechaCreado=datetime.datetime.now()
+        )
+
+       await RecomendacionRepository.create_recomendacion(recomendacion)
+
+       resultado = {
+           "ocasion": ocasion,
+           "vestuarioSugerido": [
+               {
+                   "nombre": p.nombre,
+                   "color": p.color,
+                   "categoria": p.tipoPrendaId.categoria,
+                   "imagen": p.imagen,
+               } for p in prendas_sugeridas
+           ]
+       }
+
+       return resultado
