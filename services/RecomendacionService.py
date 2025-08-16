@@ -16,11 +16,27 @@ class RecomendacionService:
             for p in prendas
         ])
         prompt = f"""Eres un asistente de moda.
-        Estas son las prendas disponibles del usuario:
+        Tienes la siguiente lista de prendas del usuario. 
+        Cada prenda incluye su nombre, el color en código hexadecimal y su categoría (superior o inferior).
+        Debes considerar todos estos atributos para hacer tu recomendación, pero en la respuesta final SOLO devolverás el nombre exacto de las prendas seleccionadas.
+        
+        Lista de prendas disponibles:
         {lista_prendas}
-        El usuario desea una recomendación de vestiario para la siguiente ocasión: "{ocasion}".
-        Elige **una prenda superior y una inferior** que combinen bien según la ocasión descrita.
-        Devuélveme solo los nombres exactos de las prendas seleccionadas.
+        
+        El usuario desea una recomendación de vestuario para la siguiente ocasión: "{ocasion}".
+
+        Reglas estrictas:
+        - Elige exactamente UNA prenda de categoría 'superior' y UNA de categoría 'inferior' que combinen bien con la ocasión.
+        - NO inventes prendas, colores ni categorías.
+        - Usa los nombres EXACTOS tal como aparecen en la lista.
+        - No cambies el orden ni la ortografía de los nombres.
+        - La respuesta final debe contener únicamente los nombres exactos de las prendas, cada uno en una línea separada, sin comentarios, colores ni categorías.
+
+        Ejemplo de salida válida:
+        Camisa
+        Pantalón
+
+        Ahora proporciona tu recomendación:
         """
         return prompt
     
@@ -31,18 +47,20 @@ class RecomendacionService:
             messages=[
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.7,
+            temperature=0.6,
         )
         contenido = response.choices[0].message.content.strip()
         return contenido
     
     @staticmethod
-    async def obtener_prendas_usuario(usuarioId: PydanticObjectId, nombres:list[str]):  
+    async def obtener_prendas_usuario(usuarioId: PydanticObjectId, nombres_sugeridos: list[str]):  
+        
         # Obtener prendas del usuario
         prendas = await PrendaService.find_prenda_by_usuario_id(usuarioId)
 
         # Filtrar prendas por nombres
-        prendas_filtradas = [p for p in prendas if p.nombre in nombres]
+        prendas_filtradas = [
+            p for p in prendas if p.nombre in nombres_sugeridos]
 
         if not prendas_filtradas:
             raise ValueError("No se encontraron prendas con los nombres proporcionados.")
@@ -53,35 +71,47 @@ class RecomendacionService:
     @staticmethod
     async def generar_recomendacion(usuarioId: PydanticObjectId, ocasion: str):
        
-       prendas_usuario = await PrendaService.find_prenda_by_usuario_id(usuarioId)
-       prendas_activas = [p for p in prendas_usuario if p.estado == "true"]
+        prendas_usuario = await PrendaService.find_prenda_by_usuario_id(usuarioId)
+        prendas_activas = [p for p in prendas_usuario if p.estado]
+       
+        # 🔍 Ver prendas activas en consola
+        print("\n=== PRENDAS ACTIVAS DEL USUARIO ===")
+        for p in prendas_activas:
+            print(f"- {p.nombre}, color {p.color}, categoría {p.tipoPrendaId.categoria}")
+        print("===================================\n")
 
-       prompt = await RecomendacionService.prompt(prendas_activas, ocasion)
+        prompt = await RecomendacionService.prompt(prendas_activas, ocasion)
 
-       respuesta = await RecomendacionService.obtener_recomendacion(prompt)
-       nombres_sugeridos = [line.strip("-•* ").strip() for line in respuesta.splitlines() if line.strip()]
+        respuesta = await RecomendacionService.obtener_recomendacion(prompt)
 
-       prendas_sugeridas = await RecomendacionService.obtener_prendas_usuario(usuarioId, nombres_sugeridos)
+        print("==== RESPUESTA ORIGINAL DEL MODELO ====")
+        print(repr(respuesta))  
 
-       vestuario = Vestuario(
-           usuarioId=usuarioId,
+        nombres_sugeridos = [line.strip("-•* ").strip() for line in respuesta.splitlines() if line.strip()]
+
+        print("==== LISTA DE NOMBRES SUGERIDOS ====")
+        print(nombres_sugeridos)
+
+        prendas_sugeridas = await RecomendacionService.obtener_prendas_usuario(usuarioId, nombres_sugeridos)
+
+        vestuario = Vestuario(
+            usuarioId=usuarioId,
            prendas=[p.id for p in prendas_sugeridas],
-           ocasion=ocasion,
            fechaCreacion=datetime.datetime.now()
         )
 
-       await VestuarioRepository.create_vestuario(vestuario)
+        await VestuarioRepository.create_vestuario(vestuario)
 
-       recomendacion = Recomendacion(
+        recomendacion = Recomendacion(
            usuarioId=usuarioId,
            ocasion=ocasion,
            vestuarioSugerido=[p.id for p in prendas_sugeridas],
            fechaCreado=datetime.datetime.now()
         )
 
-       await RecomendacionRepository.create_recomendacion(recomendacion)
+        await RecomendacionRepository.create_recomendacion(recomendacion)
 
-       resultado = {
+        resultado = {
            "ocasion": ocasion,
            "vestuarioSugerido": [
                {
@@ -89,8 +119,8 @@ class RecomendacionService:
                    "color": p.color,
                    "categoria": p.tipoPrendaId.categoria,
                    "imagen": p.imagen,
-               } for p in prendas_sugeridas
-           ]
-       }
+                } for p in prendas_sugeridas
+            ]
+        }
 
-       return resultado
+        return resultado

@@ -115,7 +115,7 @@ class PrendaService:
             raise error
     
     @staticmethod
-    async def find_all_prendas() -> list[Prenda]:
+    async def find_all_prendas():
         try:
             prendas = await PrendaRepository.find_all_prendas()
             if not prendas:

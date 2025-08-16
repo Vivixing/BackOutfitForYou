@@ -1,3 +1,4 @@
+from typing import List
 from beanie import PydanticObjectId
 from controllers.PrendaController import PrendaController
 from schemas.PrendaSchema import PrendaActualizadoRequest, PrendaCreadoRequest

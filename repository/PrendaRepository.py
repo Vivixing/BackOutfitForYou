@@ -1,5 +1,5 @@
 import datetime 
-from typing import Optional 
+from typing import Optional, List
 from models.PrendaModel import Prenda
 from beanie import PydanticObjectId
 
@@ -15,7 +15,7 @@ class PrendaRepository:
     
     @staticmethod
     async def find_prenda_by_usuario_id(usuario_id: PydanticObjectId) -> list[Prenda]:
-        return await Prenda.find(Prenda.usuarioId.id == usuario_id).to_list()
+        return await Prenda.find(Prenda.usuarioId.id == usuario_id, fetch_links=True).to_list()
     
     @staticmethod
     async def find_prenda_by_tipo_prenda_id(tipo_prenda_id: PydanticObjectId) -> list[Prenda]:
@@ -26,9 +26,9 @@ class PrendaRepository:
         return await Prenda.find(Prenda.nombre == name).to_list()
     
     @staticmethod
-    async def find_all_prendas() -> list[Prenda]:
-        return await Prenda.find(Prenda.estado == True).to_list()
-    
+    async def find_all_prendas() -> List[Prenda]:
+        return await Prenda.find(Prenda.estado == True, fetch_links=True).to_list()
+
     @staticmethod
     async def update_prenda(id:PydanticObjectId, update_prenda:dict) -> Prenda:
         prenda = await PrendaRepository.find_prenda_by_id(id)

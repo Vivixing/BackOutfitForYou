@@ -2,8 +2,8 @@ from beanie import Document, Link
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List
-from .UsuarioModel import UsuarioModel
-from .VestuarioModel import VestuarioModel
+from .UsuarioModel import Usuario
+from .VestuarioModel import Vestuario
 
 class FavoritoModel(BaseModel):
     usuarioId: str 
@@ -14,5 +14,5 @@ class FavoritoModel(BaseModel):
         collection = "favoritos"
 
 class Favorito(FavoritoModel, Document):
-    usuarioId: Link[UsuarioModel]  
-    vestuarioId: List[Link[VestuarioModel]]  
+    usuarioId: Link[Usuario]  
+    vestuarioId: List[Link[Vestuario]] = []

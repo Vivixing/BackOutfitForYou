@@ -2,8 +2,8 @@ from typing import List
 from beanie import Document, Link
 from pydantic import BaseModel
 from datetime import datetime
-from .UsuarioModel import UsuarioModel
-from .VestuarioModel import VestuarioModel
+from .UsuarioModel import Usuario
+from .VestuarioModel import Vestuario
 
 class VisualizacionModel(BaseModel):
     usuarioId: str
@@ -15,5 +15,5 @@ class VisualizacionModel(BaseModel):
         collection = "visualizaciones"
 
 class Visualizacion(VisualizacionModel, Document):
-    usuarioId: Link[UsuarioModel]
-    vestuarioId: List[Link[VestuarioModel]]=[]
+    usuarioId: Link[Usuario]
+    vestuarioId: List[Link[Vestuario]]=[]

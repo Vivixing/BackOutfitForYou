@@ -1,9 +1,8 @@
 from beanie import Document, Link, PydanticObjectId
 from datetime import datetime
 from pydantic import BaseModel, Field
-from typing import Optional
-from .TipoPrendaModel import TipoPrendaModel
-from .UsuarioModel import UsuarioModel
+from .TipoPrendaModel import TipoPrenda
+from .UsuarioModel import Usuario
 
 class PrendaModel(BaseModel):
     usuarioId: PydanticObjectId
@@ -16,8 +15,8 @@ class PrendaModel(BaseModel):
     estado: bool = Field(default=True)
 
 class Prenda(Document, PrendaModel):
-    usuarioId: Link[UsuarioModel] 
-    tipoPrendaId: Link[TipoPrendaModel]
+    usuarioId: Link[Usuario] 
+    tipoPrendaId: Link[TipoPrenda]
 
     class Settings:
         collection = "prendas"
