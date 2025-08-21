@@ -55,7 +55,6 @@ class RecomendacionService:
     @staticmethod
     async def obtener_prendas_usuario(usuarioId: PydanticObjectId, nombres_sugeridos: list[str]):  
         
-        # Obtener prendas del usuario
         prendas = await PrendaService.find_prenda_by_usuario_id(usuarioId)
 
         # Filtrar prendas por nombres
@@ -71,6 +70,7 @@ class RecomendacionService:
     @staticmethod
     async def generar_recomendacion(usuarioId: PydanticObjectId, ocasion: str):
        
+       # Solo genera la recomendación 
         prendas_usuario = await PrendaService.find_prenda_by_usuario_id(usuarioId)
         prendas_activas = [p for p in prendas_usuario if p.estado]
        
@@ -81,46 +81,49 @@ class RecomendacionService:
         print("===================================\n")
 
         prompt = await RecomendacionService.prompt(prendas_activas, ocasion)
-
         respuesta = await RecomendacionService.obtener_recomendacion(prompt)
 
+        # 🔍 Ver respuesta del modelo en consola
         print("==== RESPUESTA ORIGINAL DEL MODELO ====")
         print(repr(respuesta))  
 
         nombres_sugeridos = [line.strip("-•* ").strip() for line in respuesta.splitlines() if line.strip()]
 
+        # 🔍 Ver respuesta de los nombres sugueridos en consola
         print("==== LISTA DE NOMBRES SUGERIDOS ====")
         print(nombres_sugeridos)
 
-        prendas_sugeridas = await RecomendacionService.obtener_prendas_usuario(usuarioId, nombres_sugeridos)
+        prendas_sugeridas = await RecomendacionService.obtener_prendas_usuario(usuarioId, nombres_sugeridos)   
+
+        return prendas_sugeridas
+    
+    async def guardar_recomendacion(usuarioId:PydanticObjectId, ocasion: str):
+        
+        prendas_sugeridas_guardar = await RecomendacionService.generar_recomendacion(usuarioId, ocasion)
 
         vestuario = Vestuario(
             usuarioId=usuarioId,
-           prendas=[p.id for p in prendas_sugeridas],
-           fechaCreacion=datetime.datetime.now()
+            prendas=[p.id for p in prendas_sugeridas_guardar],
+            fechaCreacion=datetime.datetime.now()
         )
-
         await VestuarioRepository.create_vestuario(vestuario)
 
         recomendacion = Recomendacion(
-           usuarioId=usuarioId,
-           ocasion=ocasion,
-           vestuarioSugerido=[p.id for p in prendas_sugeridas],
-           fechaCreado=datetime.datetime.now()
+            usuarioId=usuarioId,
+            ocasion=ocasion,
+            vestuarioSugerido=[p.id for p in prendas_sugeridas_guardar],
+            fechaCreado=datetime.datetime.now()
         )
-
         await RecomendacionRepository.create_recomendacion(recomendacion)
 
-        resultado = {
-           "ocasion": ocasion,
-           "vestuarioSugerido": [
-               {
-                   "nombre": p.nombre,
-                   "color": p.color,
-                   "categoria": p.tipoPrendaId.categoria,
-                   "imagen": p.imagen,
-                } for p in prendas_sugeridas
+        return {
+            "ocasion": ocasion,
+            "vestuario Sugerido": [
+                {
+                    "nombre": p.nombre,
+                    "color:": p.color,
+                    "categoría": p.tipoPrendaId.categoria,
+                    "imagen": p.imagen,
+                } for p in  prendas_sugeridas_guardar
             ]
         }
-
-        return resultado
