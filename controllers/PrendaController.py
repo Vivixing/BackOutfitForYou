@@ -20,16 +20,22 @@ class PrendaController:
             imagen_bytes = await imagen.read()
             imagen_base64 = base64.b64encode(imagen_bytes).decode("utf-8")
 
-            #Predicción con modelo
-            nombrePrenda_predicho = PrendaService.predict_model(model, imagen_base64)
-
+            #Predicción de la prenda con modelo
+            try:
+                nombrePrenda_predicho = PrendaService.predict_model(model, imagen_base64)
+            except Exception:
+                nombrePrenda_predicho = None
+ 
             #Detectar color
-            color = PrendaService.obtener_color_predominante_prenda(imagen_base64)
+            try:
+                color = PrendaService.obtener_color_predominante_prenda(imagen_base64)
+            except Exception:
+                color = None
 
             return {
             "status": 200,
-            "nombre_prenda_predicha": nombrePrenda_predicho,
-            "color": color,
+            "nombre_prenda_predicha": nombrePrenda_predicho if nombrePrenda_predicho else "No detectada",
+            "color": color if color else "No detectado",
             "imagen_base64": imagen_base64  # Para que el cliente pueda enviarla en /create si quiere
             }
         except Exception as e:

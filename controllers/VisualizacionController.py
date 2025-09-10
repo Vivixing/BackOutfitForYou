@@ -1,6 +1,6 @@
 from fastapi import UploadFile, HTTPException
 from services.VisualizacionService import VisualizacionService
-from fastapi.responses import FileResponse
+import base64
 import tempfile
 import os
 
@@ -27,8 +27,11 @@ class VisualizacionController:
             if error:
                 raise HTTPException(status_code=400, detail=error)
             
-            return FileResponse(result, media_type="image/png", filename="outfit.png")
+            with open(result, "rb") as f:
+                img_bytes = f.read()
+            img_base64 = base64.b64encode(img_bytes).decode("utf-8")
+
+            return {"image_base64": img_base64}
         
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
-        

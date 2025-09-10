@@ -84,7 +84,7 @@ class VisualizacionService:
 
         person = await VisualizacionService.classify_person(Path(person_fp), llm)
         if not person.hay_persona:
-            return None, "The first image does not contain a person."
+            return None, "La primera imagen no contiene una persona."
 
         clothing_results, invalid = [], []
         for fp in clothing_fps:
