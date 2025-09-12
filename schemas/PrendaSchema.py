@@ -4,6 +4,7 @@ from typing import Optional
 from beanie import PydanticObjectId
 from pydantic import BaseModel, Field, field_validator
 from fastapi import HTTPException
+from typing import Literal
 
 hex_pattern = r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
 
@@ -78,3 +79,10 @@ class PrendaActualizadoRequest(BaseModel):
                 detail="Color debe estar en formato de código hexadecimal"
             )
         return color_prenda
+
+
+class Clothing(BaseModel):
+    hay_prenda: bool = Field(..., description="Whether this image is a clothing item")
+    tipo_prenda: str = Field(..., description="Type of clothing (only in English)")
+    zona_cuerpo: Literal["superior", "inferior"] = Field(
+        ..., description="Body area: 'superior' or 'inferior'")

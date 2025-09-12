@@ -7,39 +7,96 @@ from services.TipoPrendaService import TipoPrendaService
 from schemas.PrendaSchema import PrendaCreadoRequest, PrendaActualizadoRequest
 from services.PrendaService import PrendaService
 from fastapi import HTTPException, UploadFile
+from rembg import remove
+from PIL import Image
+from io import BytesIO
 import base64
+import os
+from langchain_openai import ChatOpenAI
+import tempfile
+from pathlib import Path
 
 class PrendaController:
 
     @staticmethod
     async def predict_prenda(imagen: UploadFile):
-        try:
-            #Cargar el modelo una sola vez
-            model = load_h5_model()
-            #convertir imagen a bytes
-            imagen_bytes = await imagen.read()
-            imagen_base64 = base64.b64encode(imagen_bytes).decode("utf-8")
+        model = load_h5_model()
+        temp_dir = tempfile.gettempdir()
+        clothing_path = os.path.join(temp_dir, f"clothing_{imagen.filename}")
 
-            #Predicción de la prenda con modelo
+        try:
+            # Guardar archivo temporalmente
+            with open(clothing_path, "wb") as f:
+                f.write(await imagen.read())
+
+            # Validar API Key
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise HTTPException(status_code=400, detail="No está cargada la clave API")
+
+            # Inicializar LLM
+            llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key)
+
+            # Clasificar prenda
             try:
-                nombrePrenda_predicho = PrendaService.predict_model(model, imagen_base64)
+                item = await PrendaService.classify_clothing(Path(clothing_path), llm)
             except Exception:
-                nombrePrenda_predicho = None
- 
-            #Detectar color
+                item = None
+
+            # Si no es prenda, cerrar flujo inmediatamente
+            if item is None or not item.hay_prenda:
+                raise HTTPException(
+                    status_code=400,
+                    detail="La imagen suministrada no parece ser una prenda de vestir."
+                )
+
+            tipos_permitidos = ["jacket","pants","shirt","sweater","t-shirt","hoodie"]
+            if item.tipo_prenda.lower() not in tipos_permitidos:
+                nombre_prenda_predicho = "No detectada"
+                mensaje_usuario = f"Tipo de prenda no permitido para predicción: {item.tipo_prenda}"
+            else:
+                try:
+                    # Codificar imagen para predicción
+                    with open(clothing_path, "rb") as f:
+                        image_base64 = base64.b64encode(f.read()).decode()
+
+                    if item.zona_cuerpo.lower() == "superior":
+                        nombre_prenda_predicho = PrendaService.predict_model(model, image_base64)
+                    else:
+                        nombre_prenda_predicho = PrendaService.predict_model_lower(model, image_base64)
+
+                    mensaje_usuario = f"Prenda detectada: {nombre_prenda_predicho}"
+                except Exception:
+                    nombre_prenda_predicho = "No detectada"
+                    mensaje_usuario = "Ocurrió un error al predecir la prenda."
+
+            # Remover fondo siempre que sea prenda
+            input_bytes = open(clothing_path, "rb").read()
+            output_bytes = remove(input_bytes)
+            img_transparent = Image.open(BytesIO(output_bytes)).convert("RGBA")
+
+            # Detectar color siempre que sea prenda
             try:
-                color = PrendaService.obtener_color_predominante_prenda(imagen_base64)
+                color = PrendaService.obtener_color_predominante_prenda(img_transparent)
             except Exception:
-                color = None
+                color = "No detectado"
+
+            #Convertir a base64
+            buffered = BytesIO()
+            img_transparent.save(buffered, format="PNG")
+            image_base64_transparent = base64.b64encode(buffered.getvalue()).decode()
 
             return {
-            "status": 200,
-            "nombre_prenda_predicha": nombrePrenda_predicho if nombrePrenda_predicho else "No detectada",
-            "color": color if color else "No detectado",
-            "imagen_base64": imagen_base64  # Para que el cliente pueda enviarla en /create si quiere
+                "status": 200,
+                "nombre_prenda_predicha": nombre_prenda_predicho,
+                "mensaje_usuario": mensaje_usuario,
+                "color": color,
+                "imagen_base64": image_base64_transparent
             }
+
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
+
 
 
     @staticmethod
