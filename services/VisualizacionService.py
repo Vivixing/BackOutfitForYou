@@ -1,11 +1,15 @@
-import base64
 from schemas.VisualizacionSchema import ClothingItem, Person
-from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.output_parsers import PydanticOutputParser
-import tempfile
-from pathlib import Path
+from models.VisualizacionModel import Visualizacion
+from repository.VestuarioRepository import VestuarioRepository
+from langchain_openai import ChatOpenAI
 from openai import OpenAI
+from pathlib import Path
+from typing import List
+import tempfile
+import datetime
+import base64
 import uuid
 import os
 
@@ -123,3 +127,14 @@ class VisualizacionService:
         except Exception as e:
             print("Error tryon:", e)
             return None, f"Error al generar la imagen: {e}"
+        
+    @staticmethod
+    async def createVisualizacion(usuarioId: str, vestuarioId: List[str], imagen_visualizacion: str):
+        
+        visualizacion = Visualizacion(
+            usuarioId=usuarioId,
+            vestuarioId=vestuarioId,
+            imagen=imagen_visualizacion,
+            fechaCreado= datetime.datetime.now()
+        )
+        await VestuarioRepository.create_vestuario(visualizacion)

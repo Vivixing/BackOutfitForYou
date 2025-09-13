@@ -1,3 +1,4 @@
+from beanie import PydanticObjectId
 from fastapi import UploadFile, HTTPException
 from services.VisualizacionService import VisualizacionService
 import base64
@@ -35,3 +36,11 @@ class VisualizacionController:
         
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
+        
+    @staticmethod
+    async def guardarVisualizacionOutfit(usuarioId: PydanticObjectId, vestuarioId: list[PydanticObjectId], imagen_visualizacion: str):
+        try:
+            visualizacion = await VisualizacionService.createVisualizacion(usuarioId, vestuarioId, imagen_visualizacion)
+            return {"message": "Visualización guardada exitosamente", "data": visualizacion}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
