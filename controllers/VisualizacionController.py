@@ -38,7 +38,7 @@ class VisualizacionController:
             raise HTTPException(status_code=400, detail=str(e))
         
     @staticmethod
-    async def guardarVisualizacionOutfit(usuarioId: PydanticObjectId, vestuarioId: list[PydanticObjectId], imagen_visualizacion: str):
+    async def guardarVisualizacionOutfit(usuarioId: str, vestuarioId: str, imagen_visualizacion: str):
         try:
             visualizacion = await VisualizacionService.createVisualizacion(usuarioId, vestuarioId, imagen_visualizacion)
             return {"message": "Visualización guardada exitosamente", "data": visualizacion}

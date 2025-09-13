@@ -6,7 +6,7 @@ from fastapi import HTTPException
 class FavoritoController:
 
     @staticmethod
-    async def create_favorito(usuarioId: PydanticObjectId, vestuarioId: list[PydanticObjectId]) -> Favorito:
+    async def create_favorito(usuarioId: str, vestuarioId: str) -> Favorito:
         try:
             favorito = await FavoritoService.create_favorito(usuarioId, vestuarioId)
             return {"message": "Favorito creado exitosamente", "data": favorito}

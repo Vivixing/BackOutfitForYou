@@ -8,7 +8,7 @@ from .VestuarioModel import Vestuario
 class RecomendacionModel(BaseModel):
     usuarioId: PydanticObjectId
     ocasion: str
-    vestuarioSugerido: List[str] = []
+    vestuarioSugerido: str 
     fechaCreado: datetime
 
     class Settings:
@@ -16,4 +16,4 @@ class RecomendacionModel(BaseModel):
 
 class Recomendacion(RecomendacionModel,Document):
     usuarioId: Link[Usuario]
-    vestuarioSugerido: List[Link[Vestuario]]=[]
+    vestuarioSugerido: Link[Vestuario]

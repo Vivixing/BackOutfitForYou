@@ -7,12 +7,13 @@ from .VestuarioModel import Vestuario
 
 class FavoritoModel(BaseModel):
     usuarioId: str 
-    vestuarioId: List[str] = []
+    vestuarioId: str
     fechaCreado: datetime
+    estado: bool
 
     class Settings:
         collection = "favoritos"
 
 class Favorito(FavoritoModel, Document):
     usuarioId: Link[Usuario]  
-    vestuarioId: List[Link[Vestuario]] = []
+    vestuarioId: Link[Vestuario]

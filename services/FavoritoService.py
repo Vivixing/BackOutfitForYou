@@ -5,12 +5,13 @@ import datetime
 class FavoritoService:
 
     @staticmethod
-    async def create_favorito(usuarioId: str, vestuarioId: list[str]) -> Favorito:
+    async def create_favorito(usuarioId: str, vestuarioId: str) -> Favorito:
 
         favorito = Favorito(
             usuarioId=usuarioId,
             vestuarioId=vestuarioId,
-            fechaCreado= datetime.datetime.now()
+            fechaCreado= datetime.datetime.now(),
+            estado=True
         )
         return await FavoritoRepository.create_favorito(favorito)
     

@@ -7,3 +7,8 @@ class Person(BaseModel):
 class ClothingItem(BaseModel):
     hay_prendas: bool = Field(..., description="Whether this image is a clothing item")
     tipo_prenda: str = Field(..., description="Type of clothing (e.g. shirt, pants)")
+
+class VisualizacionCreateRequest(BaseModel):
+    usuarioId: str
+    vestuarioId: str
+    imagen_visualizacion: str

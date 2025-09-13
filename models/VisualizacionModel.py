@@ -7,7 +7,7 @@ from .VestuarioModel import Vestuario
 
 class VisualizacionModel(BaseModel):
     usuarioId: str
-    vestuarioId: List[str]=[]
+    vestuarioId: str
     imagen: str
     fechaCreado: datetime
 
@@ -16,4 +16,4 @@ class VisualizacionModel(BaseModel):
 
 class Visualizacion(VisualizacionModel, Document):
     usuarioId: Link[Usuario]
-    vestuarioId: List[Link[Vestuario]]=[]
+    vestuarioId: Link[Vestuario]

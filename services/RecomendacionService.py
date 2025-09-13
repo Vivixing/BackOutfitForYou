@@ -12,7 +12,7 @@ class RecomendacionService:
     @staticmethod
     async def prompt(prendas: list[str], ocasion: str) -> str:
         lista_prendas = "\n".join([
-            f"- {p.nombre}, color {p.color}, categoría {p.tipoPrendaId.categoria}"
+            f"- ID_Prenda: {p.id}, nombre {p.nombre}, color {p.color}, categoría {p.tipoPrendaId.categoria}"
             for p in prendas
         ])
         prompt = f"""Eres un asistente de moda.
@@ -28,13 +28,13 @@ class RecomendacionService:
         Reglas estrictas:
         - Elige exactamente UNA prenda de categoría 'superior' y UNA de categoría 'inferior' que combinen bien con la ocasión.
         - NO inventes prendas, colores ni categorías.
-        - Usa los nombres EXACTOS tal como aparecen en la lista.
+        - Usa todo EXACTOS tal como aparece en la lista.
         - No cambies el orden ni la ortografía de los nombres.
-        - La respuesta final debe contener únicamente los nombres exactos de las prendas, cada uno en una línea separada, sin comentarios, colores ni categorías.
+        - En la respuesta final SOLO devolverás el ID de las prendas seleccionadas, cada uno en una línea separada, sin comentarios, colores ni categorías.
 
         Ejemplo de salida válida:
-        Camisa
-        Pantalón
+        688a7fd9225a99c1b7dfc86f
+        688a8095225a99c1b7dfc870
 
         Ahora proporciona tu recomendación:
         """
@@ -53,16 +53,16 @@ class RecomendacionService:
         return contenido
     
     @staticmethod
-    async def obtener_prendas_usuario(usuarioId: PydanticObjectId, nombres_sugeridos: list[str]):  
+    async def obtener_prendas_usuario(usuarioId: PydanticObjectId, ids_sugeridos: list[str]):  
         
         prendas = await PrendaService.find_prenda_by_usuario_id(usuarioId)
 
         # Filtrar prendas por nombres
         prendas_filtradas = [
-            p for p in prendas if p.nombre in nombres_sugeridos]
+            p for p in prendas if str(p.id) in ids_sugeridos]
 
         if not prendas_filtradas:
-            raise ValueError("No se encontraron prendas con los nombres proporcionados.")
+            raise ValueError("No se encontraron prendas con los ids proporcionados.")
         
         return prendas_filtradas
     
@@ -77,7 +77,7 @@ class RecomendacionService:
         # 🔍 Ver prendas activas en consola
         print("\n=== PRENDAS ACTIVAS DEL USUARIO ===")
         for p in prendas_activas:
-            print(f"- {p.nombre}, color {p.color}, categoría {p.tipoPrendaId.categoria}")
+            print(f"- ID_Prenda: {p.id}, nombre {p.nombre}, color {p.color}, categoría {p.tipoPrendaId.categoria}")
         print("===================================\n")
 
         prompt = await RecomendacionService.prompt(prendas_activas, ocasion)
@@ -87,13 +87,13 @@ class RecomendacionService:
         print("==== RESPUESTA ORIGINAL DEL MODELO ====")
         print(repr(respuesta))  
 
-        nombres_sugeridos = [line.strip("-•* ").strip() for line in respuesta.splitlines() if line.strip()]
+        ids_sugeridos = [line.strip("-•* ").strip() for line in respuesta.splitlines() if line.strip()]
 
         # 🔍 Ver respuesta de los nombres sugueridos en consola
-        print("==== LISTA DE NOMBRES SUGERIDOS ====")
-        print(nombres_sugeridos)
+        print("==== LISTA DE IDS SUGERIDOS ====")
+        print(ids_sugeridos)
 
-        prendas_sugeridas = await RecomendacionService.obtener_prendas_usuario(usuarioId, nombres_sugeridos)   
+        prendas_sugeridas = await RecomendacionService.obtener_prendas_usuario(usuarioId, ids_sugeridos)   
 
         return prendas_sugeridas
     
@@ -111,15 +111,17 @@ class RecomendacionService:
         recomendacion = Recomendacion(
             usuarioId=usuarioId,
             ocasion=ocasion,
-            vestuarioSugerido=[p.id for p in prendas_sugeridas_guardar],
+            vestuarioSugerido= vestuario.id,
             fechaCreado=datetime.datetime.now()
         )
         await RecomendacionRepository.create_recomendacion(recomendacion)
 
         return {
             "ocasion": ocasion,
+            "vestuarioId": str(vestuario.id),
             "vestuario Sugerido": [
                 {
+                    "id": str(p.id),
                     "nombre": p.nombre,
                     "color:": p.color,
                     "categoría": p.tipoPrendaId.categoria,

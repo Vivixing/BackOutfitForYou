@@ -9,3 +9,5 @@ class FavoritoRepository:
     @staticmethod
     async def get_favoritos_by_usuario(usuarioId: str) -> list[Favorito]:
         return await Favorito.find(Favorito.usuarioId == usuarioId).to_list()
+    
+    

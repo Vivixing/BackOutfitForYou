@@ -129,7 +129,7 @@ class VisualizacionService:
             return None, f"Error al generar la imagen: {e}"
         
     @staticmethod
-    async def createVisualizacion(usuarioId: str, vestuarioId: List[str], imagen_visualizacion: str):
+    async def createVisualizacion(usuarioId: str, vestuarioId: str, imagen_visualizacion: str):
         
         visualizacion = Visualizacion(
             usuarioId=usuarioId,
