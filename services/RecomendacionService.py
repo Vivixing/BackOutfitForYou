@@ -1,11 +1,11 @@
-import datetime
-from models.VestuarioModel import Vestuario
-from repository.VestuarioRepository import VestuarioRepository
-from services.PrendaService import PrendaService
-from models.RecomendacionModel import Recomendacion
 from repository.RecomendacionRepository import RecomendacionRepository
+from services.VestuarioService import VestuarioService
+from models.RecomendacionModel import Recomendacion
+from services.PrendaService import PrendaService
+from models.VestuarioModel import Vestuario
 from core.openAI import openai_client
 from beanie import PydanticObjectId
+import datetime
 
 class RecomendacionService:
 
@@ -106,7 +106,7 @@ class RecomendacionService:
             prendas=[p.id for p in prendas_sugeridas_guardar],
             fechaCreacion=datetime.datetime.now()
         )
-        await VestuarioRepository.create_vestuario(vestuario)
+        await VestuarioService.create_vestuario(vestuario)
 
         recomendacion = Recomendacion(
             usuarioId=usuarioId,
