@@ -28,11 +28,10 @@ class TipoPrendaController:
         except Exception as e:
             raise HTTPException(status_code=404, detail=str(e))
     
-    async def update_tipo_prenda(id:PydanticObjectId, request:TipoPrendaActualizadoRequest):
+    async def update_tipo_prenda(id: PydanticObjectId, request: TipoPrendaActualizadoRequest):
         try:
-            tipo_prenda_convert = TipoPrenda(**request.dict(), id=id)
-            tipo_prenda = await TipoPrendaService.uptade_tipo_prenda(tipo_prenda_convert)
-            return {"status": 200, "message": "Tipo de prenda actualizado correctamente", "tipo_prenda_id":str(tipo_prenda.id), "data": tipo_prenda}
+            tipo_prenda = await TipoPrendaService.update_tipo_prenda(id, request.dict(exclude_unset=True))
+            return {"status": 200, "message": "Tipo de prenda actualizado correctamente", "tipo_prenda_id": str(tipo_prenda.id), "data": tipo_prenda}
         except Exception as e:
             raise HTTPException(status_code=404, detail=str(e))
         

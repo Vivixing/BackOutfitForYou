@@ -11,7 +11,7 @@ class PrendaRepository:
     
     @staticmethod
     async def find_prenda_by_id(id: PydanticObjectId) -> Prenda:
-        return await Prenda.get(id)
+        return await Prenda.get(id, fetch_links=True)
     
     @staticmethod
     async def find_prenda_by_usuario_id(usuario_id: PydanticObjectId) -> list[Prenda]:
@@ -32,7 +32,12 @@ class PrendaRepository:
     @staticmethod
     async def update_prenda(id:PydanticObjectId, update_prenda:dict) -> Prenda:
         prenda = await PrendaRepository.find_prenda_by_id(id)
-        return await prenda.update({"$set":update_prenda})
+        if not prenda:
+            return None
+        # Agregar fecha de modificación al update
+        update_prenda["fechaModificado"] = datetime.datetime.now()
+
+        return await prenda.update({"$set": update_prenda})
     
     @staticmethod
     async def delete_prenda(id: PydanticObjectId) -> Optional[Prenda]:

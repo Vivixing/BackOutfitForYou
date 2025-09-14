@@ -18,7 +18,6 @@ class TipoPrendaCreadoRequest(BaseModel):
 
 class TipoPrendaActualizadoRequest(BaseModel):
     categoria: str = Field(...)
-    fecha_modificacion: datetime.datetime = Field(default_factory=datetime.datetime.now)
 
     @field_validator("categoria")
     def validate_categoria(cls, value):

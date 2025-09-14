@@ -21,7 +21,7 @@ async def get_tipo_prenda_by_name(category:str):
 async def get_tipo_prenda_by_id(tipo_prenda_id:PydanticObjectId):
     return await TipoPrendaController.get_tipo_prenda_by_id(tipo_prenda_id)
 
-@routerTipoPrenda.put("/update/{tipo_prenda_id}")
+@routerTipoPrenda.patch("/update/{id}")
 async def update_tipo_prenda(id:PydanticObjectId ,request:TipoPrendaActualizadoRequest):
     return await TipoPrendaController.update_tipo_prenda(id, request)
 

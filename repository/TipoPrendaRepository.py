@@ -1,3 +1,4 @@
+import datetime
 from beanie import PydanticObjectId
 from models.TipoPrendaModel import TipoPrenda
 
@@ -8,8 +9,12 @@ class TipoPrendaRepository:
         return await new_tipo_prenda.insert()
     
     @staticmethod
-    async def update_tipo_prenda(update_tipo_prenda: TipoPrenda) -> TipoPrenda:
-        return await update_tipo_prenda.update({"$set": update_tipo_prenda.dict(exclude={"id", "fechaCreado"})})
+    async def update_tipo_prenda(id: PydanticObjectId, update_data: dict) -> TipoPrenda:
+            tipo_prenda = await TipoPrendaRepository.find_tipo_prenda_by_id(id)
+            if not tipo_prenda:
+                return None
+            update_data["fechaModificado"] = datetime.datetime.now()
+            return await tipo_prenda.update({"$set": update_data})
 
     @staticmethod
     async def find_tipo_prenda_by_id(id: PydanticObjectId) -> TipoPrenda:
