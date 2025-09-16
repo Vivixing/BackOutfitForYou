@@ -1,3 +1,4 @@
+from beanie import PydanticObjectId
 from controllers.VisualizacionController import VisualizacionController
 from schemas.VisualizacionSchema import VisualizacionCreateRequest
 from fastapi import APIRouter, UploadFile
@@ -11,3 +12,7 @@ async def display_outfit(person: UploadFile, garment:list[UploadFile]):
 @routerVisualizacion.post("/create")
 async def create_visualizacion(request: VisualizacionCreateRequest):
     return await VisualizacionController.guardarVisualizacionOutfit(request.usuarioId, request.vestuarioId, request.imagen_visualizacion)
+
+@routerVisualizacion.get("/user/{usuarioId}")
+async def get_visualizaciones_by_user(usuarioId: PydanticObjectId):
+    return await VisualizacionController.obtenerVisualizacionesPorUsuario(usuarioId)

@@ -44,3 +44,11 @@ class VisualizacionController:
             return {"message": "Visualización guardada exitosamente", "data": visualizacion}
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+        
+    @staticmethod
+    async def obtenerVisualizacionesPorUsuario(usuarioId: PydanticObjectId):
+        try:
+            visualizaciones = await VisualizacionService.getVisualizacionesByUserId(usuarioId)
+            return {"data": visualizaciones}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))

@@ -1,3 +1,5 @@
+from beanie import PydanticObjectId
+from repository.VisualizacionRepository import VisualizacionRepository
 from schemas.VisualizacionSchema import ClothingItem, Person
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.output_parsers import PydanticOutputParser
@@ -137,4 +139,9 @@ class VisualizacionService:
             imagen=imagen_visualizacion,
             fechaCreado= datetime.datetime.now()
         )
-        await VestuarioRepository.create_vestuario(visualizacion)
+        return await VestuarioRepository.create_vestuario(visualizacion)
+    
+    @staticmethod
+    async def getVisualizacionesByUserId(usuarioId: PydanticObjectId) -> List[Visualizacion]:
+        visualizaciones = await VisualizacionRepository.get_visualizacion_by_user_id(usuarioId)
+        return visualizaciones
