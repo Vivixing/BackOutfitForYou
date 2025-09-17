@@ -55,23 +55,30 @@ class RecomendacionService:
     @staticmethod
     async def obtener_prendas_usuario(usuarioId: PydanticObjectId, ids_sugeridos: list[str]):  
         
-        prendas = await PrendaService.find_prenda_by_usuario_id(usuarioId)
+        try:
+            prendas = await PrendaService.find_prenda_by_usuario_id(usuarioId)
+        except Exception as error:
+            raise error
 
         # Filtrar prendas por nombres
         prendas_filtradas = [
             p for p in prendas if str(p.id) in ids_sugeridos]
 
         if not prendas_filtradas:
-            raise ValueError("No se encontraron prendas con los ids proporcionados.")
+            raise Exception("Las prendas sugeridas no existen para este usuario")
         
         return prendas_filtradas
     
 
     @staticmethod
     async def generar_recomendacion(usuarioId: PydanticObjectId, ocasion: str):
-       
-       # Solo genera la recomendación 
-        prendas_usuario = await PrendaService.find_prenda_by_usuario_id(usuarioId)
+
+        try:
+            prendas_usuario = await PrendaService.find_prenda_by_usuario_id(usuarioId)
+        except Exception as error:
+            raise Exception("No es posible generar una recomendación porque el usuario no tiene prendas registradas.")
+        
+
         prendas_activas = [p for p in prendas_usuario if p.estado]
        
         # 🔍 Ver prendas activas en consola
@@ -79,6 +86,13 @@ class RecomendacionService:
         for p in prendas_activas:
             print(f"- ID_Prenda: {p.id}, nombre {p.nombre}, color {p.color}, categoría {p.tipoPrendaId.categoria}")
         print("===================================\n")
+
+        # ✅ Validación: mínimo 2 superiores y 2 inferiores
+        superiores = [p for p in prendas_activas if p.tipoPrendaId.categoria.lower() == "superior"]
+        inferiores = [p for p in prendas_activas if p.tipoPrendaId.categoria.lower() == "inferior"]
+
+        if len(superiores) < 2 or len(inferiores) < 2:
+            raise Exception("Debes tener al menos 2 prendas superiores y 2 prendas inferiores para generar una recomendación.")
 
         prompt = await RecomendacionService.prompt(prendas_activas, ocasion)
         respuesta = await RecomendacionService.obtener_recomendacion(prompt)

@@ -74,7 +74,7 @@ class PrendaService:
             pred_class = int(np.argmax(probs))
             return class_names[pred_class]
         except Exception as e:
-            raise RuntimeError(f"⚠️ Error en la predicción: {e}")
+            raise RuntimeError(f"Ocurrió un problema al identificar la prenda. Inténtalo nuevamente. Detalle técnico: {e}")
         
     @staticmethod
     def predict_model_lower (model, image_base64:str) -> str:
@@ -104,7 +104,7 @@ class PrendaService:
             pred_class = int(np.argmax(probs))
             return class_names[pred_class]
         except Exception as e:
-            raise RuntimeError(f"⚠️ Error en la predicción: {e}")
+            raise RuntimeError(f"Ocurrió un problema al identificar la prenda. Inténtalo nuevamente. Detalle técnico: {e}")
 
     @staticmethod
     def obtener_color_predominante_prenda(image_base64:Image.Image) -> str:
@@ -116,11 +116,14 @@ class PrendaService:
             color_rgb = color_thief.get_color(quality=1)
             color_hex = '#%02x%02x%02x' % color_rgb
             return color_hex.upper()
-        except Exception as e:
-            raise RuntimeError(f"No se pudo detectar el color predominante de la prenda: {e}")
+        except Exception:
+            raise RuntimeError(f"No fue posible detectar el color principal de la prenda. Por favor, intenta con otra imagen.")
 
     @staticmethod
     async def create_prenda(new_prenda: Prenda) -> Prenda:
+        exist_prenda_by_usuario = await PrendaRepository.find_prenda_by_imagen_usuario(new_prenda.usuarioId, new_prenda.imagen)
+        if exist_prenda_by_usuario:
+            raise Exception("Ya registraste esta prenda anteriormente.")
         return await PrendaRepository.create_prenda(new_prenda)
     
     @staticmethod
@@ -128,7 +131,7 @@ class PrendaService:
         try:
             exist_prenda_id = await PrendaRepository.find_prenda_by_id(id)
             if not exist_prenda_id:
-                raise Exception("No existe una prenda con ese ID")
+                raise Exception("No se encontró ninguna prenda con el identificador proporcionado.")
             return exist_prenda_id
         except Exception as error:
             raise error
@@ -138,7 +141,7 @@ class PrendaService:
         try: 
             exist_prenda_usuario_id = await PrendaRepository.find_prenda_by_usuario_id(usuario_id)
             if not exist_prenda_usuario_id:
-                raise Exception("No existen prendas asociadas a ese usuario ID")
+                raise Exception("Aún no tienes prendas registradas.")
             return exist_prenda_usuario_id
         except Exception as error:
             raise error
@@ -148,7 +151,7 @@ class PrendaService:
         try:
             exist_prenda_tipo_prenda_id = await PrendaRepository.find_prenda_by_tipo_prenda_id(tipo_prenda_id)
             if not exist_prenda_tipo_prenda_id:
-                raise Exception("No existen una prendas asociadas a ese tipo de prenda ID")
+                raise Exception("No se encontraron prendas asociadas a ese tipo de categoría.")
             return exist_prenda_tipo_prenda_id
         except Exception as error:
             raise error
@@ -158,7 +161,7 @@ class PrendaService:
         try: 
             exist_prenda_name = await PrendaRepository.find_prenda_by_name(name)
             if not exist_prenda_name:
-                raise Exception("No existe una prenda con ese nombre")
+                raise Exception("No se encontró ninguna prenda con ese nombre.")
             return exist_prenda_name
         except Exception as error:
             raise error
@@ -168,7 +171,7 @@ class PrendaService:
         try: 
             exist_prenda_id = await PrendaRepository.find_prenda_by_id(id)
             if not exist_prenda_id:
-                raise Exception("No existe una prenda con ese ID")
+                raise Exception("No se puede eliminar: la prenda indicada no existe.")
             return await PrendaRepository.delete_prenda(id)
         except Exception as error:
             raise error
@@ -178,7 +181,7 @@ class PrendaService:
         try:
             prendas = await PrendaRepository.find_all_prendas()
             if not prendas:
-                raise Exception("No existen prendas registradas")
+                raise Exception("Aún no hay prendas registradas en la herramienta.")
             return prendas
         except Exception as error:
             raise error
@@ -188,7 +191,7 @@ class PrendaService:
         try:
             exist_prenda = await PrendaRepository.find_prenda_by_id(id)
             if not exist_prenda:
-                raise Exception("No existe una prenda con ese ID")
+                raise Exception("No se pudo actualizar porque la prenda indicada no existe.")
             
             return await PrendaRepository.update_prenda(id, update_prenda)
         except Exception as error:

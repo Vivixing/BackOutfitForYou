@@ -22,6 +22,12 @@ class PrendaRepository:
         return await Prenda.find(Prenda.tipoPrendaId.id == tipo_prenda_id).to_list()
     
     @staticmethod
+    async def find_prenda_by_imagen_usuario(usuario_id: PydanticObjectId, imagen_base64: str) -> Optional[Prenda]:
+        return await Prenda.find_one(
+            {"usuario_id": usuario_id, "imagen_base64": imagen_base64}
+        )
+
+    @staticmethod
     async def find_prenda_by_name(name: str) -> list[Prenda]:
         return await Prenda.find(Prenda.nombre == name).to_list()
     

@@ -13,7 +13,7 @@ class TipoPrendaService:
         try:
             exist_tipo_prenda = await TipoPrendaRepository.find_tipo_prenda_by_id(id)
             if not exist_tipo_prenda:
-                raise Exception("No exite un tipo de prenda con ese ID")
+                raise Exception("El tipo de prenda que buscas no existe.")
             return exist_tipo_prenda
         except Exception as error:
             raise error
@@ -23,7 +23,7 @@ class TipoPrendaService:
         try:
             exist_tipo_prenda = await TipoPrendaRepository.find_tipo_prenda_by_category(categoria)
             if not exist_tipo_prenda:
-                raise Exception("No exite un tipo de prenda con esa categoria")
+                raise Exception("No se encontraron tipos de prenda en esta categoría.")
             return exist_tipo_prenda
         except Exception as error:
             raise error
@@ -33,14 +33,17 @@ class TipoPrendaService:
         try:
             tipo_prendas = await TipoPrendaRepository.find_all_tipo_prendas()
             if not tipo_prendas:
-                raise Exception("No existen tipos de prendas registradas")
+                raise Exception("Aún no hay tipos de prendas registrados.")
             return tipo_prendas
         except Exception as error:
             raise error
     
     @staticmethod
     async def update_tipo_prenda(id: PydanticObjectId, update_data: dict) -> TipoPrenda:
-        exist_tipo_prenda = await TipoPrendaRepository.find_tipo_prenda_by_id(id)
-        if not exist_tipo_prenda:
-            raise Exception("No exite un tipo de prenda con ese ID")
-        return await TipoPrendaRepository.update_tipo_prenda(id, update_data)
+        try:
+            exist_tipo_prenda = await TipoPrendaRepository.find_tipo_prenda_by_id(id)
+            if not exist_tipo_prenda:
+                raise Exception("No se puede actualizar porque el tipo de prenda no existe.")
+            return await TipoPrendaRepository.update_tipo_prenda(id, update_data)
+        except Exception as error:
+            raise error

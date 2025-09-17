@@ -5,6 +5,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.output_parsers import PydanticOutputParser
 from models.VisualizacionModel import Visualizacion
 from repository.VestuarioRepository import VestuarioRepository
+from repository.UsuarioRepository import UsuarioRepository
 from langchain_openai import ChatOpenAI
 from openai import OpenAI
 from pathlib import Path
@@ -79,18 +80,18 @@ class VisualizacionService:
     async def try_on(person_fp: str, clothing_fps: list[str]):
 
         if len(clothing_fps) > 2:
-            return None, "No cargue más de 2 prendas."
+            return None, "Solo puede cargar hasta 2 prendas a la vez."
 
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            return None, "No está cargada la clave API"
+            return None, "No se encontró la clave de acceso al servicio."
 
         llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key)
         img_client = OpenAI(api_key=api_key)
 
         person = await VisualizacionService.classify_person(Path(person_fp), llm)
         if not person.hay_persona:
-            return None, "La primera imagen no contiene una persona."
+            return None, "La imagen debe contener claramente a una persona."
 
         clothing_results, invalid = [], []
         for fp in clothing_fps:
@@ -100,7 +101,7 @@ class VisualizacionService:
             else:
                 invalid.append(Path(fp).name)
         if invalid:
-            return None, f"Estos archivos no son artículos de ropa válidos: {', '.join(invalid)}"
+            return None, f"Los siguientes archivos no parecen ser prendas de vestir: {', '.join(invalid)}"
         
         types = [c.tipo_prenda for c in clothing_results]
         prompt_text = (
@@ -125,23 +126,48 @@ class VisualizacionService:
             out_path = Path(tempfile.gettempdir()) / f"composite_{uuid.uuid4().hex}.png"
             out_path.write_bytes(base64.b64decode(resp.data[0].b64_json))
             return str(out_path), ""
-        
-        except Exception as e:
-            print("Error tryon:", e)
-            return None, f"Error al generar la imagen: {e}"
+        except Exception:
+            return None, f"Hubo un problema al generar la visualización. Inténtelo nuevamente más tarde."
         
     @staticmethod
     async def createVisualizacion(usuarioId: str, vestuarioId: str, imagen_visualizacion: str):
+
+        try:
+            if not usuarioId:
+                raise Exception("El usuario es obligatorio.")
+            exist_usuario_by_id = await UsuarioRepository.find_user_by_id(usuarioId)
+            if not exist_usuario_by_id:
+                raise Exception("El usuario no existe.")
+            
+            if not vestuarioId:
+                raise Exception("El vestuario es obligatorio.")
+            exist_vestuario_by_id = await VestuarioRepository.get_vestuario_by_id(vestuarioId)
+            if not exist_vestuario_by_id:
+                raise Exception("El vestuario no existe.")
+            if exist_vestuario_by_id.usuarioId != usuarioId:
+                raise Exception("Este vestuario no pertenece al usuario.")
+            
+            if not imagen_visualizacion:
+                raise Exception ("La imagen de la visualización es obligatoria.")
+            if not imagen_visualizacion.startswith("data:image/") and not imagen_visualizacion.strip():
+                raise Exception("El formato de la imagen no es válido.")
         
-        visualizacion = Visualizacion(
-            usuarioId=usuarioId,
-            vestuarioId=vestuarioId,
-            imagen=imagen_visualizacion,
-            fechaCreado= datetime.datetime.now()
-        )
-        return await VestuarioRepository.create_vestuario(visualizacion)
+            visualizacion = Visualizacion(
+                usuarioId=usuarioId,
+                vestuarioId=vestuarioId,
+                imagen=imagen_visualizacion,
+                fechaCreado= datetime.datetime.now()
+            )
+            return await VestuarioRepository.create_vestuario(visualizacion)
+        except Exception as error:
+            raise error
     
     @staticmethod
     async def getVisualizacionesByUserId(usuarioId: PydanticObjectId) -> List[Visualizacion]:
-        visualizaciones = await VisualizacionRepository.get_visualizacion_by_user_id(usuarioId)
-        return visualizaciones
+        try: 
+            exist_visualizaciones_by_usuario = await VisualizacionRepository.get_visualizacion_by_user_id(usuarioId)
+            if not exist_visualizaciones_by_usuario:
+                raise Exception("Aún no tienes visualizaciones registradas.")
+            return exist_visualizaciones_by_usuario
+        except Exception as error:
+            raise error
