@@ -1,3 +1,4 @@
+import os
 from routers.RecomendacionRouter import routerRecomendacion as recomendacion_router
 from routers.VisualizacionRouter import routerVisualizacion as visualizacion_router
 from routers.TipoPrendaRouter import routerTipoPrenda as tipo_prenda_router
@@ -38,3 +39,8 @@ async def startup_event():
     model = await load_h5_model_main()
     return {"message": "Inicialización completa"}
 
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
