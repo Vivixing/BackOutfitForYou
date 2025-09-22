@@ -10,17 +10,9 @@ routerPrenda = APIRouter(prefix="/clothe", tags=["Prenda"])
 async def predict_prenda(imagen: UploadFile = File(...)):
     return await PrendaController.predict_prenda(imagen)
 
-@routerPrenda.post("/detect_color")
-async def detectar_color(imagen: UploadFile = File(...)):
-    return await PrendaController.detectar_color_prenda(imagen)
-
 @routerPrenda.post("/create")
 async def create_prenda(request: PrendaCreadoRequest):
     return await PrendaController.create_prenda(request)
-
-@routerPrenda.get("/get_all")
-async def get_all_prendas():
-    return await PrendaController.get_all_prendas()
 
 @routerPrenda.get("/get_by_id/{prenda_id}")
 async def get_prenda_by_id(prenda_id:PydanticObjectId):

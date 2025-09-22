@@ -10,4 +10,4 @@ class RecomendacionRepository:
     
     @staticmethod
     async def find_recomendaciones_by_usuario_id(usuario_id:  PydanticObjectId)-> List[Recomendacion]:
-        return await Recomendacion.find(Recomendacion.usuarioId.id == usuario_id).to_list()
+        return await Recomendacion.find(Recomendacion.usuarioId.id == usuario_id, fetch_links=True).to_list()

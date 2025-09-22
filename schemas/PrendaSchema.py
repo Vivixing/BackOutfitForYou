@@ -18,11 +18,11 @@ class PrendaCreadoRequest(BaseModel):
     @field_validator("nombre", mode="before")
     def validar_nombre(cls, nombre_prenda):
         if not nombre_prenda.replace(" ", "").isalpha():
-            raise HTTPException("Nombre de la prenda no puede contener números ni caracteres especiales")
+            raise HTTPException(status_code=400, detail="Nombre de la prenda no puede contener números ni caracteres especiales")
         if len(nombre_prenda) < 3:
-            raise HTTPException("Nombre de la prenda debe de tener al menos 4 caracteres")
+            raise HTTPException(status_code=400, detail="Nombre de la prenda debe tener al menos 3 caracteres")
         if len(nombre_prenda) > 30:
-            raise HTTPException("Nombre de la prenda no puede tener más de 30 caracteres")
+            raise HTTPException(status_code=400, detail="Nombre de la prenda no puede tener más de 30 caracteres")
         return nombre_prenda
     
     @field_validator("color", mode="before")
@@ -32,7 +32,7 @@ class PrendaCreadoRequest(BaseModel):
             return color_prenda
         
         if not isinstance(color_prenda, str):
-            raise HTTPException(status_code=400, detail="El color debe ser una cadena de texto")
+            raise HTTPException(status_code=400, detail="El color de la prenda debe ser una cadena de texto")
         
         if not re.match(hex_pattern, color_prenda):
             raise HTTPException(
@@ -44,7 +44,7 @@ class PrendaCreadoRequest(BaseModel):
     @field_validator("imagen_base64", mode="before")
     def validar_base64(cls,valor):
         if valor is not None and not isinstance(valor, str):
-            raise HTTPException("El campo imagen_base64 debe ser una cadena en base64")
+            raise HTTPException(status_code=400, detail="El campo imagen_base64 debe ser una cadena en base64")
         return valor
     
 class PrendaActualizadoRequest(BaseModel):
@@ -86,3 +86,6 @@ class Clothing(BaseModel):
     tipo_prenda: str = Field(..., description="Type of clothing (only in English)")
     zona_cuerpo: Literal["superior", "inferior"] = Field(
         ..., description="Body area: 'superior' or 'inferior'")
+    es_solo_prenda: bool = Field(
+        ..., description="True if the image shows ONLY the clothing item isolated, without people, mannequins, or backgrounds"
+    )

@@ -13,8 +13,8 @@ class UsuarioController:
             user_convert = Usuario(**request.dict())
             user = await UsuarioService.create_user(user_convert)
             return {"status": 200, "message": "Usuario creado correctamente", "user_id":str(user.id), "data": user}
-        except HTTPException as e:
-             raise HTTPException(status_code=401, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=401, detail=str(e))
 
     @staticmethod
     async def login_user(request:UsuarioLoginRequest):

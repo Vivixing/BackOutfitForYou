@@ -32,7 +32,7 @@ class PrendaController:
             # Validar API Key
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
-                raise HTTPException(status_code=400, detail="No está cargada la clave API")
+                raise Exception("No está cargada la clave API")
 
             # Inicializar LLM
             llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key)
@@ -45,10 +45,10 @@ class PrendaController:
 
             # Si no es prenda, cerrar flujo inmediatamente
             if item is None or not item.hay_prenda:
-                raise HTTPException(
-                    status_code=400,
-                    detail="La imagen suministrada no parece ser una prenda de vestir."
-                )
+                raise Exception("La imagen suministrada no parece ser una prenda de vestir.")
+            
+            if item is None or not item.es_solo_prenda:
+                raise Exception("La imagen suministrada no es válida, por favor sube únicamente la prenda sin personas.")
 
             tipos_permitidos = ["jacket","pants","shirt","sweater","t-shirt","hoodie"]
             if item.tipo_prenda.lower() not in tipos_permitidos:

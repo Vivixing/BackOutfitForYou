@@ -18,12 +18,12 @@ class TipoPrendaRepository:
 
     @staticmethod
     async def find_tipo_prenda_by_id(id: PydanticObjectId) -> TipoPrenda:
-        return await TipoPrenda.get(id)
+        return await TipoPrenda.get(id, fetch_links=True)
     
     @staticmethod
     async def find_tipo_prenda_by_category(categoria: str) -> list[TipoPrenda]:
-        return await TipoPrenda.find(TipoPrenda.categoria == categoria).to_list()
+        return await TipoPrenda.find(TipoPrenda.categoria == categoria, fetch_links=True).to_list()
     
     @staticmethod
     async def find_all_tipo_prendas() -> list[TipoPrenda]:
-        return await TipoPrenda.find().to_list()
+        return await TipoPrenda.find(fetch_links=True).to_list()

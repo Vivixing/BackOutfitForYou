@@ -7,18 +7,23 @@ from fastapi import HTTPException
 class VestuarioController:
     @staticmethod
     async def create_vestuario(vestuario: Vestuario) -> Vestuario:
-        return await VestuarioService.create_vestuario(vestuario)
+        vestuario_creado = await VestuarioService.create_vestuario(vestuario)
+        return {"message": "Vestuario creado", "data":vestuario_creado}
+
 
     @staticmethod
     async def get_vestuario_by_id(vestuario_id: PydanticObjectId) -> Vestuario:
-        vestuario = await VestuarioService.get_vestuario_by_id(vestuario_id)
-        if not vestuario:
-            raise HTTPException(status_code=404, detail="Vestuario no encontrado")
-        return vestuario
+        try: 
+            vestuario = await VestuarioService.get_vestuario_by_id(vestuario_id)
+            return {"message": "Vestuario encontrado", "data":vestuario}
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=str(e))
+
 
     @staticmethod
     async def get_vestuario_by_usuario(usuario_id: PydanticObjectId) -> list[Vestuario]:
-        Vestuario_user = await VestuarioService.get_vestuario_by_usuario(usuario_id)
-        if not Vestuario_user:
-            raise HTTPException(status_code=404, detail="No se encontraron vestuarios de este usuario")
-        return Vestuario_user
+        try:
+            Vestuario_user = await VestuarioService.get_vestuario_by_usuario(usuario_id)
+            return {"message":"Vestuario encontrado", "data": Vestuario_user}
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=str(e))

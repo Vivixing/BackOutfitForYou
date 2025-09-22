@@ -86,7 +86,7 @@ class VisualizacionService:
         if not api_key:
             return None, "No se encontró la clave de acceso al servicio."
 
-        llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key)
+        llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key, max_tokens=200)
         img_client = OpenAI(api_key=api_key)
 
         person = await VisualizacionService.classify_person(Path(person_fp), llm)
@@ -141,11 +141,6 @@ class VisualizacionService:
             
             if not vestuarioId:
                 raise Exception("El vestuario es obligatorio.")
-            exist_vestuario_by_id = await VestuarioRepository.get_vestuario_by_id(vestuarioId)
-            if not exist_vestuario_by_id:
-                raise Exception("El vestuario no existe.")
-            if exist_vestuario_by_id.usuarioId != usuarioId:
-                raise Exception("Este vestuario no pertenece al usuario.")
             
             if not imagen_visualizacion:
                 raise Exception ("La imagen de la visualización es obligatoria.")
@@ -158,7 +153,7 @@ class VisualizacionService:
                 imagen=imagen_visualizacion,
                 fechaCreado= datetime.datetime.now()
             )
-            return await VestuarioRepository.create_vestuario(visualizacion)
+            return await VisualizacionRepository.create_visualizacion(visualizacion)
         except Exception as error:
             raise error
     

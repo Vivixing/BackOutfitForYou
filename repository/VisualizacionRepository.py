@@ -9,4 +9,4 @@ class VisualizacionRepository:
     
     @staticmethod
     async def get_visualizacion_by_user_id(usuarioId: PydanticObjectId) -> list[Visualizacion]:
-        return await Visualizacion.find(Visualizacion.usuarioId.id == usuarioId).to_list()
+        return await Visualizacion.find(Visualizacion.usuarioId.id == usuarioId, fetch_links=True).to_list()

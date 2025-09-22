@@ -9,7 +9,7 @@ class RecomendacionController:
         try:
             recomendacion = await RecomendacionService.generar_recomendacion(usuarioId, ocasion)
             return {"message": "Recomendación generada exitosamente", "data": recomendacion}
-        except ValueError as e:
+        except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
@@ -19,7 +19,7 @@ class RecomendacionController:
         try:
             recomendacion = await RecomendacionService.guardar_recomendacion(usuarioId, ocasion)
             return {"message": "Recomendación guadarda exitosamente", "data":recomendacion}
-        except ValueError as e:
+        except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))

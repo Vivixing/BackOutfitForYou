@@ -20,8 +20,11 @@ import cv2
 
 cloth_parser = PydanticOutputParser(pydantic_object=Clothing)
 cloth_prompt = f"""
-You are a visual assistant. Check if the provided image shows a clothing item.
-If so, return the type of clothing item ONLY in English and whether it is for the upper or lower body.
+You are a visual assistant. Check if the provided image shows ONLY a clothing item.
+
+If so, return the type of clothing item ONLY in English, specify whether it is for the upper or lower body, 
+and confirm if the item is isolated (not worn by a person or mannequin).
+
 Return EXACTLY one JSON object matching this schema:
 {cloth_parser.get_format_instructions()}
 """.strip()
@@ -37,7 +40,7 @@ class PrendaService:
         msgs = [
             SystemMessage(content=cloth_prompt),
             HumanMessage(content=[
-                {"type": "text", "text": "Does the image show a clothing item?"},
+                {"type": "text", "text": "Does the image show ONLY an isolated clothing item?"},
                 {"type": "image",
                 "source_type": "base64",
                 "data": VisualizacionService.codificar_imagen(image_path),
@@ -47,7 +50,7 @@ class PrendaService:
         structured = llm.with_structured_output(Clothing)
         for _ in range(3):
             res = structured.invoke(msgs)
-            if res.hay_prenda and res.tipo_prenda and res.zona_cuerpo:
+            if res.hay_prenda and res.tipo_prenda and res.zona_cuerpo and res.es_solo_prenda:
                 return res
         return res
 
@@ -72,7 +75,12 @@ class PrendaService:
 
             probs = model.predict(img_array)[0]
             pred_class = int(np.argmax(probs))
-            return class_names[pred_class]
+            prediction = class_names[pred_class]
+
+            if prediction.lower() in ["camiseta/top"]:
+                prediction = "Camiseta"
+            
+            return prediction
         except Exception as e:
             raise RuntimeError(f"Ocurrió un problema al identificar la prenda. Inténtalo nuevamente. Detalle técnico: {e}")
         
@@ -102,7 +110,12 @@ class PrendaService:
 
             probs = model.predict(img_array)[0]
             pred_class = int(np.argmax(probs))
-            return class_names[pred_class]
+            prediction = class_names[pred_class]
+
+            if prediction.lower() in ["camiseta/top"]:
+                prediction = "Camiseta"
+            
+            return prediction
         except Exception as e:
             raise RuntimeError(f"Ocurrió un problema al identificar la prenda. Inténtalo nuevamente. Detalle técnico: {e}")
 

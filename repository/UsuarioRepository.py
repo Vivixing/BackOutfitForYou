@@ -11,13 +11,13 @@ class UsuarioRepository:
     
     @staticmethod
     async def find_user_by_name(name: str) -> Usuario:
-        return await Usuario.find_one(Usuario.nombre == name)
+        return await Usuario.find_one(Usuario.nombre == name, fetch_links=True)
     
     @staticmethod
     async def find_user_by_email(email: EmailStr) -> Usuario:
-        return await Usuario.find_one(Usuario.email == email)
+        return await Usuario.find_one(Usuario.email == email, fetch_links=True)
  
     @staticmethod
     async def find_user_by_id(user_id: PydanticObjectId) -> Usuario:
-        return await Usuario.get(user_id)
+        return await Usuario.get(user_id, fetch_links=True)
     
