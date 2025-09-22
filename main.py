@@ -10,16 +10,10 @@ from core.modelLoader import load_h5_model_main
 from core.database import init_db
 from fastapi import FastAPI
 
-
 app = FastAPI()
 
 # Inicializar modelo una sola vez
 model = None
-
-# Lista de orígenes permitidos
-origins = [
-    "http://localhost:8100",  # frontend Ionic
-]
 
 app.add_middleware(
     CORSMiddleware,
