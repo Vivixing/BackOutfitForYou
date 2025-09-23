@@ -1,6 +1,9 @@
 version: '3.9'
 services:
-  web:
+  app:
     build: .
+    container_name: outfitforyou_fast_api
     ports:
-      - "10000:10000"
+      - "8000:8000"
+    environment:
+      - PORT=8000
