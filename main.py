@@ -32,6 +32,10 @@ app.include_router(vestuario_router)
 app.include_router(visualizacion_router)
 app.include_router(favorito_router)
 
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
 @app.on_event("startup")
 async def startup_event():
     global model
@@ -42,5 +46,4 @@ async def startup_event():
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 10000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=10000)
