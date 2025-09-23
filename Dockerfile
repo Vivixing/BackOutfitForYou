@@ -1,5 +1,5 @@
 # Imagen base
-FROM python:3.11-slim
+FROM python:3.11.4-slim
 
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
@@ -19,7 +19,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Exponer el puerto que Render asigna dinámicamente
-EXPOSE 8000
+ENV PORT=8000
+EXPOSE ${PORT}
 
 # Comando de arranque (Render pasará su $PORT)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT}"]
