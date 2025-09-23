@@ -34,7 +34,7 @@ app.include_router(favorito_router)
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World", "Port": port}
+    return {"Hello": "World"}
 
 @app.on_event("startup")
 async def startup_event():
@@ -46,5 +46,4 @@ async def startup_event():
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
