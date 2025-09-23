@@ -38,9 +38,11 @@ def read_root():
 
 @app.on_event("startup")
 async def startup_event():
+    print(">>> Iniciando base de datos y modelo...")
     global model
     await init_db() 
     model = await load_h5_model_main()
+    print(">>> Inicialización completa")
     return {"message": "Inicialización completa"}
 
 

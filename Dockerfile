@@ -19,8 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Exponer el puerto que Render asigna dinámicamente
-ENV PORT=8000
-EXPOSE ${PORT}
+EXPOSE 8000
 
 # Comando de arranque (Render pasará su $PORT)
 CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT}"]
