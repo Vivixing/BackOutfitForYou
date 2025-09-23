@@ -1,11 +1,11 @@
 # Imagen base
 FROM python:3.11-slim
 
-# Crear directorio de trabajo
-WORKDIR /app
-
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y build-essential
+
+# Crear directorio de trabajo
+WORKDIR /app
 
 # Copia el archivo de requisitos al directorio de trabajo e instalarlos
 COPY requirements.txt .
