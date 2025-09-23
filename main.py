@@ -34,12 +34,12 @@ app.include_router(favorito_router)
 
 @app.get("/")
 async def read_root():
-        print(">>> Iniciando base de datos y modelo...")
-        global model
-        await init_db() 
-        model = await load_h5_model_main()
-        print(">>> Inicialización completa")
-        return {"message": "Inicialización completa"} 
+    print(">>> Iniciando base de datos y modelo...")
+    global model
+    await init_db() 
+    model = await load_h5_model_main()
+    print(">>> Inicialización completa")
+    return {"message": "Inicialización completa"} 
 
 if __name__ == "__main__":
     import uvicorn
