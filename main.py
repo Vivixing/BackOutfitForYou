@@ -16,10 +16,10 @@ model = None
 
 # Definir lifespan (reemplazo de on_event)
 async def lifespan(app: FastAPI):
-    global model
+    #global model
     print(">>> Iniciando base de datos y modelo...")
-    await init_db()
-    model = await load_h5_model_main()
+    #await init_db()
+    #model = await load_h5_model_main()
     print(">>> Inicialización completa")
     yield  # <- aquí FastAPI sigue corriendo
     print(">>> Cerrando aplicación...")  # Opcional, al apagar la app
