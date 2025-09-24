@@ -6,8 +6,8 @@ from routers.FavoritoRouter import routerFavorito as favorito_router
 from routers.PrendaRouter import routerPrenda as prenda_router
 from routers.UsuarioRouter import router as usuario_router
 from fastapi.middleware.cors import CORSMiddleware
-from core.modelLoader import load_h5_model_main
-from core.database import init_db
+#from core.modelLoader import load_h5_model_main
+#from core.database import init_db
 from fastapi import FastAPI
 import os
 
