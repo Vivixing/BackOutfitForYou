@@ -6,8 +6,8 @@ from routers.FavoritoRouter import routerFavorito as favorito_router
 from routers.PrendaRouter import routerPrenda as prenda_router
 from routers.UsuarioRouter import router as usuario_router
 from fastapi.middleware.cors import CORSMiddleware
-#from core.modelLoader import load_h5_model_main
-#from core.database import init_db
+from core.modelLoader import load_h5_model_main
+from core.database import init_db
 from fastapi import FastAPI
 import os
 
@@ -16,10 +16,10 @@ model = None
 
 # Definir lifespan (reemplazo de on_event)
 async def lifespan(app: FastAPI):
-    #global model
+    global model
     print(">>> Iniciando base de datos y modelo...")
-    #await init_db()
-    #model = await load_h5_model_main()
+    await init_db()
+    model = await load_h5_model_main()
     print(">>> Inicialización completa")
     yield  # <- aquí FastAPI sigue corriendo
     print(">>> Cerrando aplicación...")  # Opcional, al apagar la app
