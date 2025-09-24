@@ -1,6 +1,5 @@
 from repository.VestuarioRepository import VestuarioRepository
 from models.VestuarioModel import Vestuario
-import datetime
 
 class VestuarioService:
 

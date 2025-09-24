@@ -4,7 +4,6 @@ from schemas.VisualizacionSchema import ClothingItem, Person
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.output_parsers import PydanticOutputParser
 from models.VisualizacionModel import Visualizacion
-from repository.VestuarioRepository import VestuarioRepository
 from repository.UsuarioRepository import UsuarioRepository
 from langchain_openai import ChatOpenAI
 from openai import OpenAI

@@ -1,6 +1,4 @@
 import datetime
-
-from beanie import PydanticObjectId
 from fastapi import HTTPException 
 from enums.CategoriaEnums import CategoriaEnums
 from pydantic import BaseModel, Field, field_validator

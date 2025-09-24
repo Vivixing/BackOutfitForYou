@@ -1,4 +1,3 @@
-from typing import List
 from beanie import Document, Link
 from pydantic import BaseModel
 from datetime import datetime

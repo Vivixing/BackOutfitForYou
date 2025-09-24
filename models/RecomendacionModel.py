@@ -1,6 +1,5 @@
 from beanie import Document, Link, PydanticObjectId
 from pydantic import BaseModel
-from typing import List
 from datetime import datetime
 from .UsuarioModel import Usuario
 from .VestuarioModel import Vestuario

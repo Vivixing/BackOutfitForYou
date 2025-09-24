@@ -1,7 +1,6 @@
 from beanie import Document, Link
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
 from .UsuarioModel import Usuario
 from .VestuarioModel import Vestuario
 
