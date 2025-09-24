@@ -15,7 +15,7 @@ import os
 model = None
 
 # Definir lifespan (reemplazo de on_event)
-def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI):
     #global model
     print(">>> Iniciando base de datos y modelo...")
     #await init_db()
