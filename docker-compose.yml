@@ -5,3 +5,7 @@ services:
     container_name: outfitforyou_fast_api
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
