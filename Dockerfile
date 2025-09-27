@@ -11,15 +11,15 @@ RUN apt-get update && apt-get install -y \
 # Crear directorio de trabajo
 WORKDIR /app
 
-# Copia el archivo de requisitos al directorio de trabajo e instalarlos
+# Copia el archivo de requisitos al directorio de trabajo e instala
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia el código de tu aplicación FastAPI al directorio de trabajo
+# Copia el código FastAPI al directorio de trabajo
 COPY . .
 
-# Exponer el puerto que Render asigna dinámicamente
+# Exponer el puerto
 EXPOSE 8000
 
-# Comando de arranque (Render pasará su $PORT)
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT"]
+# Comando de arranque
+CMD ["python", "main.py"]
