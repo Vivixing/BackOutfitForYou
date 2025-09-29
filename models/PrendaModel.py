@@ -14,7 +14,7 @@ class PrendaModel(BaseModel):
     fechaModificado: datetime = Field(default_factory=datetime.now)
     estado: bool = Field(default=True)
 
-class Prenda(Document, PrendaModel):
+class Prenda(PrendaModel,Document):
     usuarioId: Link[Usuario] 
     tipoPrendaId: Link[TipoPrenda]
 

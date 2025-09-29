@@ -157,7 +157,7 @@ class VisualizacionService:
             raise error
     
     @staticmethod
-    async def getVisualizacionesByUserId(usuarioId: PydanticObjectId) -> List[Visualizacion]:
+    async def getVisualizacionesByUserId(usuarioId: PydanticObjectId):
         try: 
             exist_visualizaciones_by_usuario = await VisualizacionRepository.get_visualizacion_by_user_id(usuarioId)
             if not exist_visualizaciones_by_usuario:

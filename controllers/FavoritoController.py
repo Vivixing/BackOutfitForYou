@@ -2,24 +2,42 @@ from services.FavoritoService import FavoritoService
 from models.FavoritoModel import Favorito
 from beanie import PydanticObjectId
 from fastapi import HTTPException
+from schemas.FavoritoSchema import FavoritoRequest
+from services.UsuarioService import UsuarioService
+from services.VestuarioService import VestuarioService
+import traceback
+import datetime
 
 class FavoritoController:
 
     @staticmethod
-    async def create_favorito(usuarioId: str, vestuarioId: str) -> Favorito:
+    async def create_favorito(request: FavoritoRequest):
         try:
-            favorito = await FavoritoService.create_favorito(usuarioId, vestuarioId)
+            usuario = await UsuarioService.find_user_by_id(request.usuarioId)
+            vestuario = await VestuarioService.get_vestuario_by_id(request.vestuarioId)
+
+            favorito_convert = Favorito(
+                usuarioId=usuario,
+                vestuarioId=vestuario,
+                fechaCreado=datetime.datetime.now(),
+                estado=True
+            )
+            favorito = await FavoritoService.create_favorito(favorito_convert)
             return {"message": "Favorito creado exitosamente", "data": favorito}
         except Exception as e:
-             raise HTTPException(status_code=500, detail=str(e))
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=str(e))
         
     @staticmethod
-    async def get_favoritos_by_usuario(usuarioId: PydanticObjectId) -> list[Favorito]:
+    async def get_favoritos_by_usuario(usuarioId: PydanticObjectId):
+        print("Llegó al controller", usuarioId)
         try:
             favoritos = await FavoritoService.get_favoritos_by_usuario(usuarioId)
             return {"status": 200, "message": "Favoritos obtenidos exitosamente", "data": favoritos}
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            print("Error validando Favorito:", e)
+            traceback.print_exc()
+            raise HTTPException(status_code=404, detail=str(e))
         
     @staticmethod
     async def delete_favorito(favoritoId: PydanticObjectId):

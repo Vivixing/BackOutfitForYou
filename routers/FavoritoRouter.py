@@ -7,10 +7,11 @@ routerFavorito = APIRouter(prefix="/favorite", tags=["Favorito"])
 
 @routerFavorito.post("/create",)
 async def create_favorito(request: FavoritoRequest):
-    return await FavoritoController.create_favorito(request.usuarioId, request.vestuarioId)
+    return await FavoritoController.create_favorito(request)
 
 @routerFavorito.get("/{usuarioId}",)
 async def get_favoritos_by_usuario(usuarioId: PydanticObjectId):
+    print("Parametro recibido:", usuarioId)
     return await FavoritoController.get_favoritos_by_usuario(usuarioId)
 
 @routerFavorito.delete("/delete/{favoritoId}",)

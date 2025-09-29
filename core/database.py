@@ -29,7 +29,7 @@ async def init_db():
         # Crear las colecciones
         await init_beanie(
             database=db,
-            document_models=[Usuario, Prenda, TipoPrenda, Vestuario, Favorito, Recomendacion, Visualizacion]
+            document_models=[Usuario, Prenda, TipoPrenda, Vestuario, Recomendacion, Visualizacion, Favorito ]
         )
         print("Colecciones creadas")
     except Exception as e:
