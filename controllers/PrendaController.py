@@ -14,7 +14,6 @@ from PIL import Image
 import base64
 import os
 import tempfile
-import time
 import datetime
 
 # Inicialización global (al iniciar la app)
@@ -26,15 +25,14 @@ class PrendaController:
     @staticmethod
     async def predict_prenda(imagen: UploadFile):
 
-        start_total = time.time()
-
         temp_dir = tempfile.gettempdir()
         clothing_path = os.path.join(temp_dir, f"clothing_{imagen.filename}")
 
         try:
             # Guardar archivo temporalmente
+            image_bytes = await imagen.read()
             with open(clothing_path, "wb") as f:
-                f.write(await imagen.read())
+                f.write(image_bytes)
 
             # Reducir tamaño de imagen antes de enviar al LLM
             img = Image.open(clothing_path)
@@ -45,9 +43,7 @@ class PrendaController:
 
             # Clasificar prenda
             try:
-                t1 = time.time()
                 item = await PrendaService.classify_clothing(Path(clothing_path), llm)
-                print("Clasificación LLM:", time.time() - t1, "segundos")
             except Exception:
                 item = None
 
@@ -59,32 +55,26 @@ class PrendaController:
                 raise Exception("La imagen suministrada no es válida, por favor sube únicamente la prenda sin personas.")
             
             # --- Remover fondo UNA sola vez para todas las prendas ---
-            t2 = time.time()
-            input_bytes = open(clothing_path, "rb").read()
-            output_bytes = remove(input_bytes)
+            output_bytes = remove(image_bytes)
             img_transparent = Image.open(BytesIO(output_bytes)).convert("RGBA")
-            print("Remoción de fondo:", time.time() - t2, "segundos")
 
             # Codificar la imagen removida en base64 para la predicción
             buffered = BytesIO()
             img_transparent.save(buffered, format="PNG")
-            image_base64 = base64.b64encode(buffered.getvalue()).decode()
+            image_base64_model = base64.b64encode(buffered.getvalue()).decode()
 
             #Predicción solo si es un tipo permitido
-            tipos_permitidos = ["jacket","pants","shirt","sweater","t-shirt","hoodie"]
+            tipos_permitidos = ["jacket","pants","shirt","sweater","t-shirt","hoodie","jeans","pantalones","pantalón","camisa","camiseta","chaqueta","suéter"]
             if item.tipo_prenda.lower() not in tipos_permitidos:
                 nombre_prenda_predicho = "No detectada"
                 mensaje_usuario = f"Tipo de prenda no permitido para predicción: {item.tipo_prenda}"
             else:
                 try:
                     # Predicción del modelo
-                    t3 = time.time()
-                    
                     if item.zona_cuerpo.lower() == "superior":
-                        nombre_prenda_predicho = PrendaService.predict_model(model, image_base64)
+                        nombre_prenda_predicho = PrendaService.predict_model(model, image_base64_model)
                     else:
-                        nombre_prenda_predicho = PrendaService.predict_model_lower(model, image_base64)
-                    print("Predicción modelo:", time.time() - t3, "segundos")
+                        nombre_prenda_predicho = PrendaService.predict_model_lower(model, image_base64_model)
                     mensaje_usuario = f"Prenda detectada: {nombre_prenda_predicho}"
                 except Exception:
                     nombre_prenda_predicho = "No detectada"
@@ -92,9 +82,7 @@ class PrendaController:
 
             # Detectar color siempre que sea prenda
             try:
-                t4 = time.time()
                 color = PrendaService.obtener_color_predominante_prenda(img_transparent)
-                print("Detección de color:", time.time() - t4, "segundos")
             except Exception:
                 color = "No detectado"
 
@@ -102,8 +90,6 @@ class PrendaController:
             buffered_final = BytesIO()
             img_transparent.save(buffered_final, format="PNG")
             image_base64_transparent = base64.b64encode(buffered_final.getvalue()).decode()
-
-            print("Tiempo total predict_prenda:", time.time() - start_total, "segundos")
 
             return {
                 "status": 200,
