@@ -8,12 +8,10 @@ from fastapi import HTTPException, UploadFile
 from core.modelLoader import load_h5_model
 from langchain_openai import ChatOpenAI
 from rembg import remove
-from pathlib import Path
 from io import BytesIO
 from PIL import Image
 import base64
 import os
-import tempfile
 import datetime
 
 # Inicialización global (al iniciar la app)
@@ -25,25 +23,20 @@ class PrendaController:
     @staticmethod
     async def predict_prenda(imagen: UploadFile):
 
-        temp_dir = tempfile.gettempdir()
-        clothing_path = os.path.join(temp_dir, f"clothing_{imagen.filename}")
-
         try:
-            # Guardar archivo temporalmente
+            # Leer imagen en memoria
             image_bytes = await imagen.read()
-            with open(clothing_path, "wb") as f:
-                f.write(image_bytes)
 
             # Reducir tamaño de imagen antes de enviar al LLM
-            img = Image.open(clothing_path)
+            img = Image.open(BytesIO(image_bytes))
             img.thumbnail((512, 512))
             buffered = BytesIO()
             img.save(buffered, format="PNG")
-            image_base64 = base64.b64encode(buffered.getvalue()).decode()
+            image_bytes_resized = buffered.getvalue()
 
             # Clasificar prenda
             try:
-                item = await PrendaService.classify_clothing(Path(clothing_path), llm)
+                item = await PrendaService.classify_clothing(image_bytes_resized, llm)
             except Exception:
                 item = None
 
@@ -55,7 +48,7 @@ class PrendaController:
                 raise Exception("La imagen suministrada no es válida, por favor sube únicamente la prenda sin personas.")
             
             # --- Remover fondo UNA sola vez para todas las prendas ---
-            output_bytes = remove(image_bytes)
+            output_bytes = remove(image_bytes_resized)
             img_transparent = Image.open(BytesIO(output_bytes)).convert("RGBA")
 
             # Codificar la imagen removida en base64 para la predicción
@@ -72,7 +65,7 @@ class PrendaController:
                 try:
                     # Predicción del modelo
                     if item.zona_cuerpo.lower() == "superior":
-                        nombre_prenda_predicho = PrendaService.predict_model(model, image_base64_model)
+                        nombre_prenda_predicho = PrendaService.predict_model_white_bg(model, image_base64_model)
                     else:
                         nombre_prenda_predicho = PrendaService.predict_model_lower(model, image_base64_model)
                     mensaje_usuario = f"Prenda detectada: {nombre_prenda_predicho}"
