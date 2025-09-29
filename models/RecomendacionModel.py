@@ -10,9 +10,9 @@ class RecomendacionModel(BaseModel):
     vestuarioSugerido: str 
     fechaCreado: datetime
 
-    class Settings:
-        collection = "recomendaciones"
-
 class Recomendacion(RecomendacionModel,Document):
     usuarioId: Link[Usuario]
     vestuarioSugerido: Link[Vestuario]
+
+    class Settings:
+        collection = "recomendaciones"

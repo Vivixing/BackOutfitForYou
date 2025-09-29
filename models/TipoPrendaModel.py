@@ -8,8 +8,11 @@ class TipoPrendaModel(BaseModel):
     fechaCreado: Optional[datetime] = Field(default_factory=datetime.now)
     fechaModificado: Optional[datetime] = Field(default_factory=datetime.now)
 
-    class Settings:
-        collection = "tipos_prendas"
-
 class TipoPrenda(TipoPrendaModel, Document):
     pass
+
+    class Settings:
+        collection = "tipos_prendas"
+        indexes =[
+            "categoria"
+        ]

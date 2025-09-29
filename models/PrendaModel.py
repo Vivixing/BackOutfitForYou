@@ -20,6 +20,11 @@ class Prenda(Document, PrendaModel):
 
     class Settings:
         collection = "prendas"
+        indexes = [
+            [("usuarioId.$id", 1), ("estado", 1)],
+            "tipoPrendaId.$id"
+        ]
+        
 
 
     

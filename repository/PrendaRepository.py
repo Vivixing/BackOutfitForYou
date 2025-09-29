@@ -15,8 +15,8 @@ class PrendaRepository:
     
     @staticmethod
     async def find_prenda_by_usuario_id(usuario_id: PydanticObjectId) -> list[Prenda]:
-        return await Prenda.find(Prenda.usuarioId.id == usuario_id, fetch_links=True).to_list()
-    
+        return await Prenda.find(Prenda.usuarioId.id == usuario_id, Prenda.estado == True, fetch_links=True).to_list()
+
     @staticmethod
     async def find_prenda_by_tipo_prenda_id(tipo_prenda_id: PydanticObjectId) -> list[Prenda]:
         return await Prenda.find(Prenda.tipoPrendaId.id == tipo_prenda_id, fetch_links=True).to_list()
@@ -29,11 +29,11 @@ class PrendaRepository:
 
     @staticmethod
     async def find_prenda_by_name(name: str) -> list[Prenda]:
-        return await Prenda.find(Prenda.nombre == name, fetch_links=True).to_list()
+        return await Prenda.find(Prenda.nombre == name).to_list()
     
     @staticmethod
     async def find_all_prendas() -> List[Prenda]:
-        return await Prenda.find(Prenda.estado == True, fetch_links=True).to_list()
+        return await Prenda.find(Prenda.estado == True).to_list()
 
     @staticmethod
     async def update_prenda(id:PydanticObjectId, update_prenda:dict) -> Prenda:
