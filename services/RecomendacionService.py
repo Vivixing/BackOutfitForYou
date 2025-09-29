@@ -10,11 +10,12 @@ import datetime
 class RecomendacionService:
 
     @staticmethod
+    def _prenda_a_str(p) -> str:
+        return f"- ID_Prenda: {p.id}, nombre {p.nombre}, color {p.color}, categoría {p.tipoPrendaId.categoria}"
+
+    @staticmethod
     async def prompt(prendas: list[str], ocasion: str) -> str:
-        lista_prendas = "\n".join([
-            f"- ID_Prenda: {p.id}, nombre {p.nombre}, color {p.color}, categoría {p.tipoPrendaId.categoria}"
-            for p in prendas
-        ])
+        lista_prendas = "\n".join([RecomendacionService._prenda_a_str(p) for p in prendas])
         prompt = f"""Eres un asistente de moda.
         Tienes la siguiente lista de prendas del usuario. 
         Cada prenda incluye su nombre, el color en código hexadecimal y su categoría (superior o inferior).
@@ -51,51 +52,26 @@ class RecomendacionService:
             max_tokens=50
         )
         contenido = response.choices[0].message.content.strip()
-        return contenido
-    
-    @staticmethod
-    async def obtener_prendas_usuario(usuarioId: PydanticObjectId, ids_sugeridos: list[str]):  
-        
-        try:
-            prendas = await PrendaService.find_prenda_by_usuario_id(usuarioId)
-        except Exception as error:
-            raise error
-
-        # Filtrar prendas por nombres
-        prendas_filtradas = [
-            p for p in prendas if str(p.id) in ids_sugeridos]
-
-        if not prendas_filtradas:
-            raise Exception("Las prendas sugeridas no existen para este usuario")
-        
-        return prendas_filtradas
-    
+        return contenido    
 
     @staticmethod
     async def generar_recomendacion(usuarioId: PydanticObjectId, ocasion: str):
 
+        # Obtener prendas usuario
         try:
             prendas_usuario = await PrendaService.find_prenda_by_usuario_id(usuarioId)
-        except Exception as error:
+        except Exception:
             raise Exception("No es posible generar una recomendación porque el usuario no tiene prendas registradas.")
         
-
-        prendas_activas = [p for p in prendas_usuario if p.estado]
-       
-        # 🔍 Ver prendas activas en consola
-        print("\n=== PRENDAS ACTIVAS DEL USUARIO ===")
-        for p in prendas_activas:
-            print(f"- ID_Prenda: {p.id}, nombre {p.nombre}, color {p.color}, categoría {p.tipoPrendaId.categoria}")
-        print("===================================\n")
-
-        # ✅ Validación: mínimo 2 superiores y 2 inferiores
-        superiores = [p for p in prendas_activas if p.tipoPrendaId.categoria.lower() == "superior"]
-        inferiores = [p for p in prendas_activas if p.tipoPrendaId.categoria.lower() == "inferior"]
+        # Validar cantidad mínima
+        superiores = [p for p in prendas_usuario if p.tipoPrendaId.categoria.lower() == "superior"]
+        inferiores = [p for p in prendas_usuario if p.tipoPrendaId.categoria.lower() == "inferior"]
 
         if len(superiores) < 2 or len(inferiores) < 2:
             raise Exception("Debes tener al menos 2 prendas superiores y 2 prendas inferiores para generar una recomendación.")
 
-        prompt = await RecomendacionService.prompt(prendas_activas, ocasion)
+        #Generar prompt y obtener IDs sugeridos
+        prompt = await RecomendacionService.prompt(prendas_usuario, ocasion)
         respuesta = await RecomendacionService.obtener_recomendacion(prompt)
 
         # 🔍 Ver respuesta del modelo en consola
@@ -108,7 +84,10 @@ class RecomendacionService:
         print("==== LISTA DE IDS SUGERIDOS ====")
         print(ids_sugeridos)
 
-        prendas_sugeridas = await RecomendacionService.obtener_prendas_usuario(usuarioId, ids_sugeridos)   
+        #Filtro por prendas sugeridas
+        prendas_sugeridas = [p for p in prendas_usuario if str(p.id) in ids_sugeridos]
+        if not prendas_sugeridas:
+            raise Exception("Las prendas sugeridas no existen para este usuario")   
 
         return prendas_sugeridas
     
