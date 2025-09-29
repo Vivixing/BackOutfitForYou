@@ -8,16 +8,7 @@ routerPrenda = APIRouter(prefix="/clothe", tags=["Prenda"])
 
 @routerPrenda.post("/predict_clothe")
 async def predict_prenda(imagen: UploadFile = File(...)):
-
-    start_time = time.time()  # <- Inicio del conteo
-    resultado = await PrendaController.predict_prenda(imagen)
-
-    end_time = time.time()  # <- Fin del conteo
-    duration = end_time - start_time  # tiempo en segundos
-
-    print(f"Tiempo total de procesamiento: {duration:.2f} segundos")
-    return resultado
-
+    return await PrendaController.predict_prenda(imagen)
 
 @routerPrenda.post("/create")
 async def create_prenda(request: PrendaCreadoRequest):

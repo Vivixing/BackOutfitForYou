@@ -78,7 +78,7 @@ class RecomendacionService:
         print("==== RESPUESTA ORIGINAL DEL MODELO ====")
         print(repr(respuesta))  
 
-        ids_sugeridos = [line.strip("-•* ").strip() for line in respuesta.splitlines() if line.strip()]
+        ids_sugeridos = {line.strip("-•* ").strip() for line in respuesta.splitlines() if line.strip()}
 
         # 🔍 Ver respuesta de los nombres sugueridos en consola
         print("==== LISTA DE IDS SUGERIDOS ====")
