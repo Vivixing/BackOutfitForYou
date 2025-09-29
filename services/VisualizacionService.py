@@ -1,3 +1,4 @@
+
 from beanie import PydanticObjectId
 from repository.VisualizacionRepository import VisualizacionRepository
 from schemas.VisualizacionSchema import ClothingItem, Person
@@ -8,7 +9,6 @@ from repository.UsuarioRepository import UsuarioRepository
 from langchain_openai import ChatOpenAI
 from openai import OpenAI
 from pathlib import Path
-from typing import List
 import tempfile
 import datetime
 import base64
