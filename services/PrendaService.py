@@ -1,7 +1,7 @@
 
 from typing import Optional
 from models.PrendaModel import Prenda
-from schemas.PrendaSchema import Clothing
+from schemas.PrendaSchema import Clothing, EtiquetaMetadata
 from langchain_openai import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
 from repository.PrendaRepository import PrendaRepository
@@ -26,6 +26,16 @@ Return EXACTLY one JSON object matching this schema:
 {cloth_parser.get_format_instructions()}
 """.strip()
 
+etiqueta_parser = PydanticOutputParser(pydantic_object=EtiquetaMetadata)
+etiqueta_prompt = """
+Eres un asistente de moda. 
+Analiza la prenda en la imagen y genera metadatos útiles para recomendaciones.
+
+Devuelve un JSON con este formato
+{etiqueta_parser.get_format_instructions()}
+""".strip()
+
+
 class PrendaService:
      
     @staticmethod
@@ -48,6 +58,23 @@ class PrendaService:
                 return res
         except Exception:
             res = None
+    
+    @staticmethod
+    async def etiquetar_prenda(image_bytes: bytes, llm: ChatOpenAI) -> dict:
+        msgs = [
+            SystemMessage(content=etiqueta_prompt),
+            HumanMessage(content=[
+                {"type": "text", "text": "Etiqueta esta prenda."},
+                {"type": "image", "source_type": "base64", "data": PrendaService.codificar_imagen(image_bytes), "mime_type": "image/png"},
+            ])
+        ]
+        structured = llm.with_structured_output(EtiquetaMetadata)
+        try:
+            res = structured.invoke(msgs)
+            if res.estilo and res.ocasiones:  
+                return res
+        except Exception:
+            return {"estilo": None, "ocasiones": []}
 
     @staticmethod
     def predict_model_white_bg(model, image_base64: str) -> str:

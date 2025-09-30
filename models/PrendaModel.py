@@ -10,6 +10,8 @@ class PrendaModel(BaseModel):
     nombre: str
     color: str
     imagen: str 
+    estilo: str | None = None
+    ocasiones: list[str] = []
     fechaCreado: datetime = Field(default_factory=datetime.now)
     fechaModificado: datetime = Field(default_factory=datetime.now)
     estado: bool = Field(default=True)

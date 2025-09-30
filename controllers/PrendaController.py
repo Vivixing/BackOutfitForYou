@@ -79,6 +79,12 @@ class PrendaController:
             except Exception:
                 color = "No detectado"
 
+            #Metadatos
+            try:
+                tags = await PrendaService.etiquetar_prenda(image_bytes_resized, llm)
+            except Exception:
+                tags = {"estilo": None, "ocasiones": []}
+
             #Convertir a base64
             buffered_final = BytesIO()
             img_transparent.save(buffered_final, format="PNG")
@@ -89,6 +95,8 @@ class PrendaController:
                 "nombre_prenda_predicha": nombre_prenda_predicho,
                 "mensaje_usuario": mensaje_usuario,
                 "color": color,
+                "estilo": tags.estilo,
+                "ocasiones": tags.ocasiones,
                 "imagen_base64": image_base64_transparent
             }
 
@@ -107,6 +115,8 @@ class PrendaController:
                 nombre=request.nombre,
                 color=request.color,
                 imagen=request.imagen_base64,
+                estilo=request.estilo,
+                ocasiones=request.ocasiones,
                 fechaCreado=datetime.datetime.now(),
                 fechaModificado=datetime.datetime.now(),
                 estado=True
