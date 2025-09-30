@@ -5,7 +5,6 @@ from fastapi import HTTPException
 from schemas.FavoritoSchema import FavoritoRequest
 from services.UsuarioService import UsuarioService
 from services.VestuarioService import VestuarioService
-import traceback
 import datetime
 
 class FavoritoController:
@@ -25,7 +24,6 @@ class FavoritoController:
             favorito = await FavoritoService.create_favorito(favorito_convert)
             return {"message": "Favorito creado exitosamente", "data": favorito}
         except Exception as e:
-            traceback.print_exc()
             raise HTTPException(status_code=500, detail=str(e))
         
     @staticmethod
@@ -35,8 +33,6 @@ class FavoritoController:
             favoritos = await FavoritoService.get_favoritos_by_usuario(usuarioId)
             return {"status": 200, "message": "Favoritos obtenidos exitosamente", "data": favoritos}
         except Exception as e:
-            print("Error validando Favorito:", e)
-            traceback.print_exc()
             raise HTTPException(status_code=404, detail=str(e))
         
     @staticmethod

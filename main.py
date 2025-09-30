@@ -10,19 +10,34 @@ from core.modelLoader import load_h5_model_main
 from core.database import init_db
 from fastapi import FastAPI
 import os
+import sys
 
 # Inicializar modelo una sola vez
 model = None
 
-# Definir lifespan (reemplazo de on_event)
 async def lifespan(app: FastAPI):
     global model
+
+    api_key = os.getenv("OPENAI_API_KEY")
+    mongo_uri = os.getenv("MONGO_URI")
+
+    if not api_key:
+        print("❌ ERROR: No se encontró OPENAI_API_KEY en variables de entorno.")
+        sys.exit(1)
+    
+    if not mongo_uri:
+        print("❌ ERROR: No se encontró MONGO_URI en variables de entorno.")
+        sys.exit(1)
+    
+    print(">>> Variables de entorno cargadas correctamente")
+
     print(">>> Iniciando base de datos y modelo...")
     await init_db()
     model = await load_h5_model_main()
     print(">>> Inicialización completa")
+
     yield  # <- aquí FastAPI sigue corriendo
-    print(">>> Cerrando aplicación...")  # Opcional, al apagar la app
+    print(">>> Cerrando aplicación...")
 
 app = FastAPI(lifespan=lifespan)
 
@@ -49,4 +64,4 @@ def read_root():
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)

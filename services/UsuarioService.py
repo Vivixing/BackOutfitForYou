@@ -3,7 +3,6 @@ from repository.UsuarioRepository import UsuarioRepository
 from beanie import PydanticObjectId
 from pydantic import EmailStr
 
-
 class UsuarioService:
     
     @staticmethod

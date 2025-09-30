@@ -50,11 +50,12 @@ class VisualizacionService:
             ])
         ]
         structured = llm.with_structured_output(Person)
-        for _ in range(3):
+        try: 
             res = structured.invoke(msgs)
             if res.hay_persona and res.descripcion:
                 return res
-        return res
+        except Exception:
+            res = None
 
     @staticmethod
     async def classify_clothing(image_path: Path, llm: ChatOpenAI) -> ClothingItem:
@@ -69,11 +70,12 @@ class VisualizacionService:
             ])
         ]
         structured = llm.with_structured_output(ClothingItem)
-        for _ in range(3):
+        try:
             res = structured.invoke(msgs)
             if res.hay_prendas and res.tipo_prenda:
                 return res
-        return res
+        except Exception:
+            res = None
 
     @staticmethod
     async def try_on(person_fp: str, clothing_fps: list[str]):

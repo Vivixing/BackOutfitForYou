@@ -7,7 +7,7 @@ class PrendaRepository:
 
     @staticmethod
     async def create_prenda(new_prenda: Prenda) -> Prenda:
-        return await Prenda.insert(new_prenda)
+        return await new_prenda.insert()
     
     @staticmethod
     async def find_prenda_by_id(id: PydanticObjectId) -> Prenda:

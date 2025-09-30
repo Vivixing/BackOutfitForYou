@@ -1,6 +1,4 @@
-from typing import List
 from models.RecomendacionModel import Recomendacion
-from beanie import PydanticObjectId
 
 class RecomendacionRepository:
 

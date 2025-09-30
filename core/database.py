@@ -11,13 +11,10 @@ from models.VestuarioModel import Vestuario
 from models.VisualizacionModel import Visualizacion 
 
 async def init_db():
-    #Cargar las variables de entorno
     load_dotenv()
 
-    # Obtener la URI de la base de datos de las variables de entorno
     MONGO_URI = os.getenv("MONGO_URI")
 
-    # Crear una instancia de MongoClient
     client = AsyncIOMotorClient(MONGO_URI)
 
     db = client["oufitForYou"]

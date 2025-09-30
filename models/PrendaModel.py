@@ -27,6 +27,4 @@ class Prenda(PrendaModel,Document):
             "tipoPrendaId.$id"
         ]
         
-
-
     

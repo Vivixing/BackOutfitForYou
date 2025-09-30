@@ -78,35 +78,25 @@ class PrendaService:
 
     @staticmethod
     def predict_model_white_bg(model, image_base64: str) -> str:
-        """
-        Predice la prenda reemplazando la transparencia por fondo blanco.
-        """
         class_names = [e.value for e in PrendaCategoria]
         try:
-            # Decodificar imagen
+
             image_bytes = base64.b64decode(image_base64)
             img = Image.open(BytesIO(image_bytes)).convert("RGBA")
 
-            # Convertir a numpy
             img_rgba = np.array(img).astype("float32")
 
-            # Separar canales
             rgb = img_rgba[:, :, :3]
             alpha = img_rgba[:, :, 3:4] / 255.0
 
-            # Componer con fondo blanco
             img_rgb = rgb * alpha + 255 * (1 - alpha)
 
-            # Convertir a grayscale si tu modelo lo necesita
             img_gray = cv2.cvtColor(img_rgb.astype("uint8"), cv2.COLOR_RGB2GRAY)
 
-            # Redimensionar
             img_resized = cv2.resize(img_gray, (28, 28))
 
-            # Ajustar shape para modelo
             img_input = img_resized.reshape(1, 28, 28, 1).astype("float32") / 255.0
 
-            # Predicción
             probs = model.predict(img_input)[0]
             pred_class = int(np.argmax(probs))
             prediction = class_names[pred_class]

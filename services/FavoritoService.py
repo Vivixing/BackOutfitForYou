@@ -14,7 +14,6 @@ class FavoritoService:
     
     @staticmethod
     async def get_favoritos_by_usuario(usuarioId: PydanticObjectId) -> list[Favorito]:
-        print("Llegó a Service", usuarioId)
         try:
             exist_favorito_usuario_id = await FavoritoRepository.get_favoritos_by_usuario(usuarioId)
             if not exist_favorito_usuario_id:

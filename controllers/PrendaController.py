@@ -57,7 +57,7 @@ class PrendaController:
             image_base64_model = base64.b64encode(buffered.getvalue()).decode()
 
             #Predicción solo si es un tipo permitido
-            tipos_permitidos = ["jacket","pants","shirt","sweater","t-shirt","hoodie","jeans","pantalones","pantalón","camisa","camiseta","chaqueta","suéter"]
+            tipos_permitidos = ["jacket","pants","shirt","sweater","t-shirt","hoodie","jeans","pantalones","pantalón","camisa","camiseta","chaqueta","suéter","trouser","trousers"]
             if item.tipo_prenda.lower() not in tipos_permitidos:
                 nombre_prenda_predicho = "No detectada"
                 mensaje_usuario = f"Tipo de prenda no permitido para predicción: {item.tipo_prenda}"
@@ -105,6 +105,7 @@ class PrendaController:
 
     @staticmethod
     async def create_prenda(request:PrendaCreadoRequest):
+        print("Request recibido:", request.dict())
         try:
             usuario = await UsuarioService.find_user_by_id(request.usuarioId)
             tipo_prenda = await TipoPrendaService.find_tipo_prenda_by_id(request.tipoPrendaId) 
@@ -123,6 +124,7 @@ class PrendaController:
             )
 
             prenda = await PrendaService.create_prenda(prenda_convert)
+            print(prenda)
 
             return {"status": 200, "message": "Prenda creada correctamente", "id_Prenda": prenda.id, "nombre_predicho": prenda.nombre, "color_detectado":prenda.color, "data": prenda}
         except Exception as e:

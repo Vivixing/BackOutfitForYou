@@ -11,7 +11,6 @@ async def create_favorito(request: FavoritoRequest):
 
 @routerFavorito.get("/{usuarioId}",)
 async def get_favoritos_by_usuario(usuarioId: PydanticObjectId):
-    print("Parametro recibido:", usuarioId)
     return await FavoritoController.get_favoritos_by_usuario(usuarioId)
 
 @routerFavorito.delete("/delete/{favoritoId}",)
