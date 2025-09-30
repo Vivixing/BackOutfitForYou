@@ -9,7 +9,7 @@ from core.modelLoader import load_h5_model
 from langchain_openai import ChatOpenAI
 from rembg import remove
 from io import BytesIO
-from PIL import Image
+from PIL import Image, ImageOps
 import base64
 import os
 import datetime
@@ -29,6 +29,7 @@ class PrendaController:
 
             # Reducir tamaño de imagen antes de enviar al LLM
             img = Image.open(BytesIO(image_bytes))
+            img = ImageOps.exif_transpose(img)
             img.thumbnail((512, 512))
             buffered = BytesIO()
             img.save(buffered, format="PNG")
@@ -105,7 +106,6 @@ class PrendaController:
 
     @staticmethod
     async def create_prenda(request:PrendaCreadoRequest):
-        print("Request recibido:", request.dict())
         try:
             usuario = await UsuarioService.find_user_by_id(request.usuarioId)
             tipo_prenda = await TipoPrendaService.find_tipo_prenda_by_id(request.tipoPrendaId) 
@@ -124,7 +124,6 @@ class PrendaController:
             )
 
             prenda = await PrendaService.create_prenda(prenda_convert)
-            print(prenda)
 
             return {"status": 200, "message": "Prenda creada correctamente", "id_Prenda": prenda.id, "nombre_predicho": prenda.nombre, "color_detectado":prenda.color, "data": prenda}
         except Exception as e:

@@ -28,7 +28,6 @@ class FavoritoController:
         
     @staticmethod
     async def get_favoritos_by_usuario(usuarioId: PydanticObjectId):
-        print("Llegó al controller", usuarioId)
         try:
             favoritos = await FavoritoService.get_favoritos_by_usuario(usuarioId)
             return {"status": 200, "message": "Favoritos obtenidos exitosamente", "data": favoritos}
