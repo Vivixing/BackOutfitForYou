@@ -93,5 +93,5 @@ class Clothing(BaseModel):
     )
 
 class EtiquetaMetadata(BaseModel):
-    estilo: str | None = Field(..., description="casual, formal, deportivo, elegante, urbano, etc.")
-    ocasiones: list[str] = Field(..., description="Ocasiones posibles para las cuales se usaría esta prenda (Boda, hacer deporte, etc. )")
+    estilo: str | None = Field(..., description="Clasificación general de estilo: casual, formal, deportivo, elegante, urbano, vintage, clásico, romántico, etc.")
+    ocasiones: list[str] = Field(..., description="Ocasiones posibles para las cuales se usaría esta prenda (ejemplo: boda, trabajo, cena elegante, uso diario, deporte)")
