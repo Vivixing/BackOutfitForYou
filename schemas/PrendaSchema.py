@@ -14,6 +14,8 @@ class PrendaCreadoRequest(BaseModel):
     nombre: str = Field(..., min_length=3, max_length=30)
     color: str = Field(..., min_length=3, max_length=20)
     imagen_base64: str = Field(...)
+    estilo: Optional[str] = Field(None, description="Etiqueta de estilo asignada por el modelo, ej. deportivo, casual, formal")
+    ocasiones: Optional[list[str]] = Field(default_factory=list, description="Lista de ocasiones sugeridas para usar esta prenda")
 
     @field_validator("nombre", mode="before")
     def validar_nombre(cls, nombre_prenda):
@@ -89,3 +91,7 @@ class Clothing(BaseModel):
     es_solo_prenda: bool = Field(
         ..., description="True if the image shows ONLY the clothing item isolated, without people, mannequins, or backgrounds"
     )
+
+class EtiquetaMetadata(BaseModel):
+    estilo: str | None = Field(..., description="Clasificación general de estilo: casual, formal, deportivo, elegante, urbano, vintage, clásico, romántico, etc.")
+    ocasiones: list[str] = Field(..., description="Ocasiones posibles para las cuales se usaría esta prenda (ejemplo: boda, trabajo, cena elegante, uso diario, deporte)")

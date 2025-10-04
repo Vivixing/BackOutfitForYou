@@ -11,13 +11,10 @@ from models.VestuarioModel import Vestuario
 from models.VisualizacionModel import Visualizacion 
 
 async def init_db():
-    #Cargar las variables de entorno
     load_dotenv()
 
-    # Obtener la URI de la base de datos de las variables de entorno
     MONGO_URI = os.getenv("MONGO_URI")
 
-    # Crear una instancia de MongoClient
     client = AsyncIOMotorClient(MONGO_URI)
 
     db = client["oufitForYou"]
@@ -29,7 +26,7 @@ async def init_db():
         # Crear las colecciones
         await init_beanie(
             database=db,
-            document_models=[Usuario, Prenda, TipoPrenda, Vestuario, Favorito, Recomendacion, Visualizacion]
+            document_models=[Usuario, Prenda, TipoPrenda, Vestuario, Recomendacion, Visualizacion, Favorito ]
         )
         print("Colecciones creadas")
     except Exception as e:

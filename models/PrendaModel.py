@@ -10,16 +10,21 @@ class PrendaModel(BaseModel):
     nombre: str
     color: str
     imagen: str 
+    estilo: str | None = None
+    ocasiones: list[str] = []
     fechaCreado: datetime = Field(default_factory=datetime.now)
     fechaModificado: datetime = Field(default_factory=datetime.now)
     estado: bool = Field(default=True)
 
-class Prenda(Document, PrendaModel):
+class Prenda(PrendaModel,Document):
     usuarioId: Link[Usuario] 
     tipoPrendaId: Link[TipoPrenda]
 
     class Settings:
         collection = "prendas"
-
-
+        indexes = [
+            [("usuarioId.$id", 1), ("estado", 1)],
+            "tipoPrendaId.$id"
+        ]
+        
     

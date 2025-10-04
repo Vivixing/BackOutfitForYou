@@ -1,35 +1,14 @@
 from typing import Optional
 from repository.FavoritoRepository import FavoritoRepository
-from repository.UsuarioRepository import UsuarioRepository
-from repository.VestuarioRepository import VestuarioRepository
 from beanie import PydanticObjectId
 from models.FavoritoModel import Favorito
-import datetime
 
 class FavoritoService:
 
     @staticmethod
-    async def create_favorito(usuarioId: str, vestuarioId: str) -> Favorito:
+    async def create_favorito(new_favorito) -> Favorito:
         try:
-            if not usuarioId:
-                raise Exception("El usuario es obligatorio para guardar un favorito.")
-            usuario_exist = await UsuarioRepository.find_user_by_id(usuarioId)
-            if not usuario_exist:
-                raise Exception("El usuario no existe.")
-            
-            if not vestuarioId:
-                raise Exception("El vestuario es obligatorio para guardar un favorito.")
-            vestuario_exist = await VestuarioRepository.get_vestuario_by_id(vestuarioId)
-            if not vestuario_exist:
-                raise Exception("El vestuario no existe.")
-
-            favorito = Favorito(
-                usuarioId=usuarioId,
-                vestuarioId=vestuarioId,
-                fechaCreado= datetime.datetime.now(),
-                estado=True
-            )
-            return await FavoritoRepository.create_favorito(favorito)
+            return await FavoritoRepository.create_favorito(new_favorito)
         except Exception as error:
             raise error
     

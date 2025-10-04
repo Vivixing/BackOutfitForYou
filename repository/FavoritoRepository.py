@@ -10,7 +10,7 @@ class FavoritoRepository:
     
     @staticmethod
     async def get_favoritos_by_usuario(usuarioId: PydanticObjectId) -> list[Favorito]:
-        return await Favorito.find(Favorito.usuarioId.id == usuarioId, fetch_links=True).to_list()
+        return await Favorito.find(Favorito.usuarioId.id == usuarioId, Favorito.estado == True, fetch_links=True).to_list()
     
     @staticmethod
     async def delete_favorito(favoritoId: PydanticObjectId) -> Optional[Favorito]:

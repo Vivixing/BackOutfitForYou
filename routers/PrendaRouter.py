@@ -29,10 +29,6 @@ async def get_prenda_by_user(user_id:PydanticObjectId):
 async def get_prenda_by_tipo_prenda(tipo_prenda_id:PydanticObjectId):
     return await PrendaController.get_prendas_by_tipo_prenda(tipo_prenda_id)
 
-@routerPrenda.get("/get_by_name/{name}")
-async def get_prenda_by_name(name:str):
-    return await PrendaController.get_prenda_by_name(name)
-
 @routerPrenda.delete("/delete/{prenda_id}")
 async def delete_prenda(prenda_id:PydanticObjectId):
     return await PrendaController.delete_prenda(prenda_id)

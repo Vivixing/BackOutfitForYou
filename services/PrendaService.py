@@ -1,21 +1,18 @@
 
 from typing import Optional
 from models.PrendaModel import Prenda
-from schemas.PrendaSchema import Clothing
+from schemas.PrendaSchema import Clothing, EtiquetaMetadata
 from langchain_openai import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
 from repository.PrendaRepository import PrendaRepository
 from langchain_core.messages import HumanMessage, SystemMessage
-from services.VisualizacionService import VisualizacionService
 from beanie import PydanticObjectId
 from PIL import Image
-from pathlib import Path
 import numpy as np
 import base64
 from io import BytesIO
 from enums.PrendaCategoria import PrendaCategoria
 from colorthief import ColorThief
-from rembg import remove
 import cv2
 
 cloth_parser = PydanticOutputParser(pydantic_object=Clothing)
@@ -29,60 +26,88 @@ Return EXACTLY one JSON object matching this schema:
 {cloth_parser.get_format_instructions()}
 """.strip()
 
+etiqueta_parser = PydanticOutputParser(pydantic_object=EtiquetaMetadata)
+etiqueta_prompt = """
+Eres un asistente de moda. 
+Analiza la prenda en la imagen y genera metadatos útiles para recomendaciones.
+
+Devuelve un JSON con este formato
+{etiqueta_parser.get_format_instructions()}
+""".strip()
+
+
 class PrendaService:
      
     @staticmethod
-    def codificar_imagen(path: Path) -> str:
-        return base64.b64encode(path.read_bytes()).decode()
+    def codificar_imagen(image_bytes: bytes) -> str:
+        return base64.b64encode(image_bytes).decode()
     
     @staticmethod
-    async def classify_clothing(image_path: Path, llm: ChatOpenAI) -> Clothing:
+    async def classify_clothing(image_bytes: bytes, llm: ChatOpenAI) -> Clothing:
         msgs = [
             SystemMessage(content=cloth_prompt),
             HumanMessage(content=[
                 {"type": "text", "text": "Does the image show ONLY an isolated clothing item?"},
-                {"type": "image",
-                "source_type": "base64",
-                "data": VisualizacionService.codificar_imagen(image_path),
-                "mime_type": "image/png"},
+                {"type": "image", "source_type": "base64", "data": PrendaService.codificar_imagen(image_bytes), "mime_type": "image/png"},
             ])
         ]
         structured = llm.with_structured_output(Clothing)
-        for _ in range(3):
+        try:
             res = structured.invoke(msgs)
             if res.hay_prenda and res.tipo_prenda and res.zona_cuerpo and res.es_solo_prenda:
                 return res
-        return res
+        except Exception:
+            res = None
+    
+    @staticmethod
+    async def etiquetar_prenda(image_bytes: bytes, llm: ChatOpenAI) -> dict:
+        msgs = [
+            SystemMessage(content=etiqueta_prompt),
+            HumanMessage(content=[
+                {"type": "text", "text": "Etiqueta esta prenda."},
+                {"type": "image", "source_type": "base64", "data": PrendaService.codificar_imagen(image_bytes), "mime_type": "image/png"},
+            ])
+        ]
+        structured = llm.with_structured_output(EtiquetaMetadata)
+        try:
+            res = structured.invoke(msgs)
+            if res.estilo and res.ocasiones:  
+                return res
+        except Exception:
+            return {"estilo": None, "ocasiones": []}
 
     @staticmethod
-    def predict_model (model, image_base64:str) -> str:
+    def predict_model_white_bg(model, image_base64: str) -> str:
         class_names = [e.value for e in PrendaCategoria]
-        try: 
+        try:
+
             image_bytes = base64.b64decode(image_base64)
+            img = Image.open(BytesIO(image_bytes)).convert("RGBA")
 
-            output = remove(image_bytes)
-            img = Image.open(BytesIO(output)).convert("RGBA")
+            img_rgba = np.array(img).astype("float32")
 
-            background = Image.new("RGBA", img.size, (255, 255, 255, 255))
-            img = Image.alpha_composite(background, img)
+            rgb = img_rgba[:, :, :3]
+            alpha = img_rgba[:, :, 3:4] / 255.0
 
-            img_gray = img.convert('L')
+            img_rgb = rgb * alpha + 255 * (1 - alpha)
 
-            img_array = np.array(img_gray).astype("float32") / 255.0
-            img_array = cv2.resize(img_array, (28, 28))
+            img_gray = cv2.cvtColor(img_rgb.astype("uint8"), cv2.COLOR_RGB2GRAY)
 
-            img_array = img_array.reshape(1, 28, 28, 1)
+            img_resized = cv2.resize(img_gray, (28, 28))
 
-            probs = model.predict(img_array)[0]
+            img_input = img_resized.reshape(1, 28, 28, 1).astype("float32") / 255.0
+
+            probs = model.predict(img_input)[0]
             pred_class = int(np.argmax(probs))
             prediction = class_names[pred_class]
 
             if prediction.lower() in ["camiseta/top"]:
                 prediction = "Camiseta"
-            
+
             return prediction
+
         except Exception as e:
-            raise RuntimeError(f"Ocurrió un problema al identificar la prenda. Inténtalo nuevamente. Detalle técnico: {e}")
+            raise RuntimeError(f"Ocurrió un problema al identificar la prenda. Detalle técnico: {e}")
         
     @staticmethod
     def predict_model_lower (model, image_base64:str) -> str:
@@ -90,8 +115,7 @@ class PrendaService:
         try: 
             image_bytes = base64.b64decode(image_base64)
 
-            output = remove(image_bytes)
-            img = Image.open(BytesIO(output)).convert("RGBA")
+            img = Image.open(BytesIO(image_bytes)).convert("RGBA")
 
             img_rgba = np.array(img)
 
@@ -134,10 +158,10 @@ class PrendaService:
 
     @staticmethod
     async def create_prenda(new_prenda: Prenda) -> Prenda:
-        exist_prenda_by_usuario = await PrendaRepository.find_prenda_by_imagen_usuario(new_prenda.usuarioId, new_prenda.imagen)
-        if exist_prenda_by_usuario:
-            raise Exception("Ya registraste esta prenda anteriormente.")
-        return await PrendaRepository.create_prenda(new_prenda)
+        try:
+            return await PrendaRepository.create_prenda(new_prenda)
+        except Exception as e:
+            raise Exception(e)    
     
     @staticmethod
     async def find_prenda_by_id(id: PydanticObjectId) -> Prenda:
@@ -166,16 +190,6 @@ class PrendaService:
             if not exist_prenda_tipo_prenda_id:
                 raise Exception("No se encontraron prendas asociadas a ese tipo de categoría.")
             return exist_prenda_tipo_prenda_id
-        except Exception as error:
-            raise error
-    
-    @staticmethod
-    async def find_prenda_by_name(name: str) -> list[Prenda]:
-        try: 
-            exist_prenda_name = await PrendaRepository.find_prenda_by_name(name)
-            if not exist_prenda_name:
-                raise Exception("No se encontró ninguna prenda con ese nombre.")
-            return exist_prenda_name
         except Exception as error:
             raise error
     

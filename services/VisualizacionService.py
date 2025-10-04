@@ -1,3 +1,4 @@
+
 from beanie import PydanticObjectId
 from repository.VisualizacionRepository import VisualizacionRepository
 from schemas.VisualizacionSchema import ClothingItem, Person
@@ -8,7 +9,6 @@ from repository.UsuarioRepository import UsuarioRepository
 from langchain_openai import ChatOpenAI
 from openai import OpenAI
 from pathlib import Path
-from typing import List
 import tempfile
 import datetime
 import base64
@@ -50,11 +50,12 @@ class VisualizacionService:
             ])
         ]
         structured = llm.with_structured_output(Person)
-        for _ in range(3):
+        try: 
             res = structured.invoke(msgs)
             if res.hay_persona and res.descripcion:
                 return res
-        return res
+        except Exception:
+            res = None
 
     @staticmethod
     async def classify_clothing(image_path: Path, llm: ChatOpenAI) -> ClothingItem:
@@ -69,11 +70,12 @@ class VisualizacionService:
             ])
         ]
         structured = llm.with_structured_output(ClothingItem)
-        for _ in range(3):
+        try:
             res = structured.invoke(msgs)
             if res.hay_prendas and res.tipo_prenda:
                 return res
-        return res
+        except Exception:
+            res = None
 
     @staticmethod
     async def try_on(person_fp: str, clothing_fps: list[str]):
@@ -157,7 +159,7 @@ class VisualizacionService:
             raise error
     
     @staticmethod
-    async def getVisualizacionesByUserId(usuarioId: PydanticObjectId) -> List[Visualizacion]:
+    async def getVisualizacionesByUserId(usuarioId: PydanticObjectId):
         try: 
             exist_visualizaciones_by_usuario = await VisualizacionRepository.get_visualizacion_by_user_id(usuarioId)
             if not exist_visualizaciones_by_usuario:

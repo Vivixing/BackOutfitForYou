@@ -1,3 +1,4 @@
+from beanie import PydanticObjectId
 from repository.VestuarioRepository import VestuarioRepository
 from models.VestuarioModel import Vestuario
 
@@ -11,7 +12,7 @@ class VestuarioService:
             raise error
 
     @staticmethod
-    async def get_vestuario_by_id(vestuario_id: str) -> Vestuario:
+    async def get_vestuario_by_id(vestuario_id: PydanticObjectId):
         try:
             exist_vestuario = await VestuarioRepository.get_vestuario_by_id(vestuario_id)
             if not exist_vestuario:
@@ -21,7 +22,7 @@ class VestuarioService:
             raise error
 
     @staticmethod
-    async def get_vestuario_by_usuario(usuario_id: str) -> list[Vestuario]:
+    async def get_vestuario_by_usuario(usuario_id: PydanticObjectId):
         try:
             exist_vestuario_by_usuario = await VestuarioRepository.get_vestuario_by_usuario(usuario_id)
             if not exist_vestuario_by_usuario:

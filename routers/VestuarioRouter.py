@@ -12,6 +12,6 @@ async def get_vestuario_by_id(vestuarioId: PydanticObjectId):
 async def create_vestuario(vestuario: dict):
     return await VestuarioController.create_vestuario(vestuario)
 
-@routerVestuario.get("/user/{usuarioId}", response_model=dict)
+@routerVestuario.get("/user/{usuarioId}")
 async def get_vestuario_by_usuario(usuarioId: PydanticObjectId):
     return await VestuarioController.get_vestuario_by_usuario(usuarioId)

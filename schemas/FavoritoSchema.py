@@ -1,5 +1,6 @@
+from beanie import PydanticObjectId
 from pydantic import BaseModel
 
 class FavoritoRequest(BaseModel):
-    usuarioId: str
-    vestuarioId: str
+    usuarioId: PydanticObjectId
+    vestuarioId: PydanticObjectId

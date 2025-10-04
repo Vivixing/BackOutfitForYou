@@ -1,16 +1,15 @@
+import os
+import tempfile
 from beanie import PydanticObjectId
 from fastapi import UploadFile, HTTPException
 from services.VisualizacionService import VisualizacionService
 import base64
-import tempfile
-import os
 
 class VisualizacionController:
 
     @staticmethod
     async def mostrarVisualizacionOutfit(person: UploadFile, garment:list[UploadFile]):
-        
-        # Guardar temporalmente los archivos subidos
+
         temp_dir = tempfile.gettempdir()
         person_path = os.path.join(temp_dir, f"person_{person.filename}")
         clothing_paths = [os.path.join(temp_dir, f"clothing_{c.filename}") for c in garment]
