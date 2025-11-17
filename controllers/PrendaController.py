@@ -9,6 +9,7 @@ from core.modelLoader import load_h5_model
 from langchain_openai import ChatOpenAI
 from rembg import remove
 from io import BytesIO
+import asyncio
 from PIL import Image, ImageOps
 import base64
 import os
@@ -22,7 +23,7 @@ class PrendaController:
 
     @staticmethod
     async def predict_prenda(imagen: UploadFile):
-
+        loop = asyncio.get_event_loop()
         try:
             # Leer imagen en memoria
             image_bytes = await imagen.read()
@@ -35,9 +36,11 @@ class PrendaController:
             img.save(buffered, format="PNG")
             image_bytes_resized = buffered.getvalue()
 
+            image_base64_llm = PrendaService.codificar_imagen(image_bytes_resized)
+
             # Clasificar prenda
             try:
-                item = await PrendaService.classify_clothing(image_bytes_resized, llm)
+                item = await PrendaService.classify_clothing(image_base64_llm, llm)
             except Exception:
                 item = None
 
@@ -48,43 +51,54 @@ class PrendaController:
             if item is None or not item.es_solo_prenda:
                 raise Exception("La imagen suministrada no es válida, por favor sube únicamente la prenda sin personas.")
             
+            tagging_task = PrendaService.etiquetar_prenda(image_base64_llm, llm)
+            remove_bg_task = loop.run_in_executor(None, remove, image_bytes_resized)
+
+            results = await asyncio.gather(tagging_task, remove_bg_task, return_exceptions=True)
+
+            tags = results[0]
+            output_bytes = results[1]
+
+            if isinstance(tags, Exception):
+                print(f"Error en etiquetado: {tags}")
+                tags = {"estilo": None, "ocasiones": []}
+            if isinstance(output_bytes, Exception):
+                raise output_bytes
+
             # --- Remover fondo UNA sola vez para todas las prendas ---
-            output_bytes = remove(image_bytes_resized)
             img_transparent = Image.open(BytesIO(output_bytes)).convert("RGBA")
 
-            # Codificar la imagen removida en base64 para la predicción
-            buffered = BytesIO()
-            img_transparent.save(buffered, format="PNG")
-            image_base64_model = base64.b64encode(buffered.getvalue()).decode()
+            color_task = loop.run_in_executor(None, PrendaService.obtener_color_predominante_prenda, img_transparent)
+
+            nombre_prenda_predicho = "No detectada"
+            mensaje_usuario = f"Tipo de prenda no permitido para predicción: {item.tipo_prenda}"
+            prediction_task = None
 
             #Predicción solo si es un tipo permitido
             tipos_permitidos = ["jacket","pants","shirt","sweater","t-shirt","hoodie","jeans","pantalones","pantalón","camisa","camiseta","chaqueta","suéter","trouser","trousers"]
-            if item.tipo_prenda.lower() not in tipos_permitidos:
-                nombre_prenda_predicho = "No detectada"
-                mensaje_usuario = f"Tipo de prenda no permitido para predicción: {item.tipo_prenda}"
-            else:
-                try:
-                    # Predicción del modelo
-                    if item.zona_cuerpo.lower() == "superior":
-                        nombre_prenda_predicho = PrendaService.predict_model_white_bg(model, image_base64_model)
-                    else:
-                        nombre_prenda_predicho = PrendaService.predict_model_lower(model, image_base64_model)
-                    mensaje_usuario = f"Prenda detectada: {nombre_prenda_predicho}"
-                except Exception:
-                    nombre_prenda_predicho = "No detectada"
+            if item.tipo_prenda.lower() in tipos_permitidos:
+                # Predicción del modelo
+                if item.zona_cuerpo.lower() == "superior":
+                    prediction_task = loop.run_in_executor(None, PrendaService.predict_model_white_bg, model, img_transparent)
+                else:
+                    prediction_task = loop.run_in_executor(None, PrendaService.predict_model_lower, model, img_transparent)
+
+            if prediction_task:
+                pred_results = await asyncio.gather(color_task, prediction_task, return_exceptions=True)
+                color = pred_results[0]
+                pred_result = pred_results[1]
+
+                if isinstance(pred_result, Exception):
+                    nombre_prenda_predicho = nombre_prenda_predicho
                     mensaje_usuario = "Ocurrió un error al predecir la prenda."
-
-            # Detectar color siempre que sea prenda
-            try:
-                color = PrendaService.obtener_color_predominante_prenda(img_transparent)
-            except Exception:
+                else: 
+                    nombre_prenda_predicho = pred_result
+                    mensaje_usuario = f"Prenda detectada: {nombre_prenda_predicho}"
+            else:
+                color = await color_task
+            
+            if isinstance(color, Exception):
                 color = "No detectado"
-
-            #Metadatos
-            try:
-                tags = await PrendaService.etiquetar_prenda(image_bytes_resized, llm)
-            except Exception:
-                tags = {"estilo": None, "ocasiones": []}
 
             #Convertir a base64
             buffered_final = BytesIO()
@@ -96,8 +110,8 @@ class PrendaController:
                 "nombre_prenda_predicha": nombre_prenda_predicho,
                 "mensaje_usuario": mensaje_usuario,
                 "color": color,
-                "estilo": tags.estilo,
-                "ocasiones": tags.ocasiones,
+                "estilo": tags.get('estilo') if isinstance(tags, dict) else tags.estilo,
+                "ocasiones": tags.get('ocasiones') if isinstance(tags, dict) else tags.ocasiones,
                 "imagen_base64": image_base64_transparent
             }
 

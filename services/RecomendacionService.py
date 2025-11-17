@@ -27,25 +27,25 @@ class RecomendacionService:
         
         El usuario desea una recomendación de vestuario para la siguiente ocasión: "{ocasion}".
 
-        ⚠️ INSTRUCCIONES ESTRICTAS (OBLIGATORIAS):
-        1. Debes seleccionar **exactamente dos prendas en total**.  
-        2. Una prenda DEBE ser de la categoría **superior**.  
-        3. La otra prenda DEBE ser de la categoría **inferior**.  
-        4. No está permitido devolver dos prendas de la misma categoría.  
-        5. Prioriza prendas cuyo campo 'ocasiones' incluya la ocasión solicitada o sea compatible con ella.  
-        6. Asegúrate de que ambas prendas sean coherentes en estilo y color.  
-        7. No inventes, no expliques, no agregues texto adicional. 
+        ⚠️ INSTRUCCIONES CRÍTICAS - DEBES CUMPLIRLAS AL 100%:
+        1. Debes seleccionar **EXACTAMENTE DOS PRENDAS en total**.  
+        2. La PRIMERA línea DEBE ser el ID de una prenda con categoría **"superior"**.  
+        3. La SEGUNDA línea DEBE ser el ID de una prenda con categoría **"inferior"**.  
+        4. NUNCA devuelvas dos prendas de la misma categoría (ni dos superiores, ni dos inferiores).
+        5. Revisa bien el campo "categoría" de cada prenda antes de seleccionarla.
+        6. Prioriza prendas cuyo campo 'ocasiones' incluya la ocasión solicitada o sea compatible.  
+        7. Asegúrate de que ambas prendas sean coherentes en estilo y color.  
+        8. SOLO devuelve los IDs, sin texto adicional, sin explicaciones, sin guiones, sin numeración.
 
-        📌 FORMATO DE RESPUESTA (obligatorio):
-        Solo devuelve **dos líneas**, cada una con un ID de prenda.  
-        Primera línea: ID de la prenda superior.  
-        Segunda línea: ID de la prenda inferior.
+        📌 FORMATO DE RESPUESTA (OBLIGATORIO):
+        Línea 1: ID de UNA prenda superior
+        Línea 2: ID de UNA prenda inferior
 
-        Ejemplo de salida válida:
+        Ejemplo correcto:
         688a7fd9225a99c1b7dfc86f
         688a8095225a99c1b7dfc870
 
-        Ahora proporciona tu recomendación:
+        Ahora proporciona tu recomendación (solo dos IDs, uno por línea):
         """
         return prompt
     
@@ -86,7 +86,34 @@ class RecomendacionService:
         #Filtro por prendas sugeridas
         prendas_sugeridas = [p for p in prendas_usuario if str(p.id) in ids_sugeridos]
         if not prendas_sugeridas:
-            raise Exception("Las prendas sugeridas no existen para este usuario")   
+            raise Exception("Las prendas sugeridas no existen para este usuario")
+        
+        # ✅ VALIDACIÓN CRÍTICA: Verificar que haya 1 superior y 1 inferior
+        superiores_sugeridas = [p for p in prendas_sugeridas if p.tipoPrendaId.categoria.lower() == "superior"]
+        inferiores_sugeridas = [p for p in prendas_sugeridas if p.tipoPrendaId.categoria.lower() == "inferior"]
+
+        # Si la IA falló, corregir manualmente
+        if len(superiores_sugeridas) != 1 or len(inferiores_sugeridas) != 1:
+            # Tomar la primera/mejor superior e inferior disponibles que coincidan con la ocasión
+            prenda_superior = None
+            prenda_inferior = None
+            
+            # Buscar prendas que mencionen la ocasión
+            for p in superiores:
+                if ocasion.lower() in [oc.lower() for oc in p.ocasiones]:
+                    prenda_superior = p
+                    break
+            if not prenda_superior:
+                prenda_superior = superiores[0]  # Fallback: primera disponible
+            
+            for p in inferiores:
+                if ocasion.lower() in [oc.lower() for oc in p.ocasiones]:
+                    prenda_inferior = p
+                    break
+            if not prenda_inferior:
+                prenda_inferior = inferiores[0]  # Fallback: primera disponible
+            
+            prendas_sugeridas = [prenda_superior, prenda_inferior]
 
         return prendas_sugeridas
     

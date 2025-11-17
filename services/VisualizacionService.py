@@ -106,8 +106,18 @@ class VisualizacionService:
         
         types = [c.tipo_prenda for c in clothing_results]
         prompt_text = (
-            f"Generate a photorealistic image of the {person.descripcion}"
-            f"wearing the provided {' and '.join(types)} on a clean white background."
+            f"Create a professional full-body portrait photograph in vertical format. "
+            f"Show the complete person from head to feet with nothing cropped out. "
+            f"The person is: {person.descripcion}. "
+            f"CRITICAL REQUIREMENTS:\n"
+            f"- Keep the person's face, facial features, hair, skin tone, and body type IDENTICAL to the original image\n"
+            f"- DO NOT modify the person's appearance or physical characteristics\n"
+            f"- ONLY change the clothing to: {' and '.join(types)}\n"
+            f"- Frame must include the ENTIRE body: head at top, feet at bottom, with appropriate spacing\n"
+            f"- Use vertical portrait orientation to fit the full body without cropping\n"
+            f"- Clean white studio background\n"
+            f"- Person standing naturally in a neutral pose\n"
+            f"Ensure the complete outfit is visible from head to toe in a single full-length shot."
         )
         try:
             files = [open(person_fp, "rb")] + [open(fp, "rb") for fp in clothing_fps]

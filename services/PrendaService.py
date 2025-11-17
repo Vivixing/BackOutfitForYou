@@ -1,5 +1,7 @@
 
+from io import BytesIO
 from typing import Optional
+import cv2
 from models.PrendaModel import Prenda
 from schemas.PrendaSchema import Clothing, EtiquetaMetadata
 from langchain_openai import ChatOpenAI
@@ -10,10 +12,9 @@ from beanie import PydanticObjectId
 from PIL import Image
 import numpy as np
 import base64
-from io import BytesIO
 from enums.PrendaCategoria import PrendaCategoria
 from colorthief import ColorThief
-import cv2
+from rembg import remove
 
 cloth_parser = PydanticOutputParser(pydantic_object=Clothing)
 cloth_prompt = f"""
@@ -27,7 +28,7 @@ Return EXACTLY one JSON object matching this schema:
 """.strip()
 
 etiqueta_parser = PydanticOutputParser(pydantic_object=EtiquetaMetadata)
-etiqueta_prompt = """
+etiqueta_prompt = f"""
 Eres un asistente de moda. 
 Analiza la prenda en la imagen y genera metadatos útiles para recomendaciones.
 
@@ -43,12 +44,12 @@ class PrendaService:
         return base64.b64encode(image_bytes).decode()
     
     @staticmethod
-    async def classify_clothing(image_bytes: bytes, llm: ChatOpenAI) -> Clothing:
+    async def classify_clothing(image: str, llm: ChatOpenAI) -> Clothing:
         msgs = [
             SystemMessage(content=cloth_prompt),
             HumanMessage(content=[
                 {"type": "text", "text": "Does the image show ONLY an isolated clothing item?"},
-                {"type": "image", "source_type": "base64", "data": PrendaService.codificar_imagen(image_bytes), "mime_type": "image/png"},
+                {"type": "image", "source_type": "base64", "data": image, "mime_type": "image/png"},
             ])
         ]
         structured = llm.with_structured_output(Clothing)
@@ -60,12 +61,12 @@ class PrendaService:
             res = None
     
     @staticmethod
-    async def etiquetar_prenda(image_bytes: bytes, llm: ChatOpenAI) -> dict:
+    async def etiquetar_prenda(image: str, llm: ChatOpenAI) -> dict:
         msgs = [
             SystemMessage(content=etiqueta_prompt),
             HumanMessage(content=[
                 {"type": "text", "text": "Etiqueta esta prenda."},
-                {"type": "image", "source_type": "base64", "data": PrendaService.codificar_imagen(image_bytes), "mime_type": "image/png"},
+                {"type": "image", "source_type": "base64", "data": image, "mime_type": "image/png"},
             ])
         ]
         structured = llm.with_structured_output(EtiquetaMetadata)
@@ -77,26 +78,33 @@ class PrendaService:
             return {"estilo": None, "ocasiones": []}
 
     @staticmethod
-    def predict_model_white_bg(model, image_base64: str) -> str:
+    def predict_model_white_bg(model, img:Image.Image) -> str:
         class_names = [e.value for e in PrendaCategoria]
         try:
-
-            image_bytes = base64.b64decode(image_base64)
-            img = Image.open(BytesIO(image_bytes)).convert("RGBA")
-
-            img_rgba = np.array(img).astype("float32")
-
-            rgb = img_rgba[:, :, :3]
-            alpha = img_rgba[:, :, 3:4] / 255.0
-
-            img_rgb = rgb * alpha + 255 * (1 - alpha)
-
+            # Paso 1: Remover el fondo de la imagen
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            buffer.seek(0)
+            
+            img_sin_fondo = remove(buffer.read())
+            img_rgba = Image.open(BytesIO(img_sin_fondo)).convert("RGBA")
+            
+            # Paso 2: Convertir fondo a negro
+            img_array = np.array(img_rgba)
+            rgb = img_array[:, :, :3]
+            alpha = img_array[:, :, 3:4] / 255.0
+            
+            # Fondo negro (0, 0, 0) en lugar de blanco
+            img_rgb = rgb * alpha + 0 * (1 - alpha)
+            
+            # Paso 3: Convertir a escala de grises
             img_gray = cv2.cvtColor(img_rgb.astype("uint8"), cv2.COLOR_RGB2GRAY)
 
+            # Paso 4: Redimensionar y preparar para predicción
             img_resized = cv2.resize(img_gray, (28, 28))
-
             img_input = img_resized.reshape(1, 28, 28, 1).astype("float32") / 255.0
 
+            # Paso 5: Hacer la predicción
             probs = model.predict(img_input)[0]
             pred_class = int(np.argmax(probs))
             prediction = class_names[pred_class]
@@ -110,12 +118,9 @@ class PrendaService:
             raise RuntimeError(f"Ocurrió un problema al identificar la prenda. Detalle técnico: {e}")
         
     @staticmethod
-    def predict_model_lower (model, image_base64:str) -> str:
+    def predict_model_lower (model, img:Image.Image) -> str:
         class_names = [e.value for e in PrendaCategoria]
         try: 
-            image_bytes = base64.b64decode(image_base64)
-
-            img = Image.open(BytesIO(image_bytes)).convert("RGBA")
 
             img_rgba = np.array(img)
 
@@ -144,11 +149,12 @@ class PrendaService:
             raise RuntimeError(f"Ocurrió un problema al identificar la prenda. Inténtalo nuevamente. Detalle técnico: {e}")
 
     @staticmethod
-    def obtener_color_predominante_prenda(image_base64:Image.Image) -> str:
+    def obtener_color_predominante_prenda(img:Image.Image) -> str:
         try:
             buffer = BytesIO()
-            image_base64.save(buffer, format="PNG")
+            img.save(buffer, format="PNG")
             buffer.seek(0)
+
             color_thief = ColorThief(buffer)
             color_rgb = color_thief.get_color(quality=1)
             color_hex = '#%02x%02x%02x' % color_rgb
