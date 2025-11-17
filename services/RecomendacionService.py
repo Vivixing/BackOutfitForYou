@@ -7,6 +7,7 @@ from core.openAI import openai_client
 from beanie import PydanticObjectId
 import datetime
 
+
 class RecomendacionService:
 
     @staticmethod
@@ -15,41 +16,54 @@ class RecomendacionService:
 
     @staticmethod
     async def prompt(prendas: list[str], ocasion: str) -> str:
-        lista_prendas = "\n".join([RecomendacionService._prenda_a_str(p) for p in prendas])
-        prompt = f"""Eres un asesor de moda experto en combinar prendas según su estilo, ocasión de uso y armonía de colores.
-        
-        Tienes la siguiente lista de prendas del usuario. 
-        Cada prenda incluye su nombre, el color en código hexadecimal, su categoría (superior o inferior), estilo general (casual, formal, elegante, etc.).
-        y ocasiones sugeridas (boda, oficina, deporte, diario, etc.) 
-        
-        Lista de prendas disponibles:
+        lista_prendas = "\n".join(
+            [RecomendacionService._prenda_a_str(p) for p in prendas])
+        prompt = f"""
+        Eres un experto en moda encargado de seleccionar prendas del usuario para crear una combinación de vestuario.
+
+        A continuación tienes una lista de prendas en formato estructurado. 
+        Cada ítem contiene:
+        - id
+        - nombre
+        - color (hex)
+        - categoría ("superior" o "inferior")
+        - estilo
+        - ocasiones (lista)
+
+        PRNDAS DISPONIBLES:
         {lista_prendas}
-        
-        El usuario desea una recomendación de vestuario para la siguiente ocasión: "{ocasion}".
 
-        ⚠️ INSTRUCCIONES CRÍTICAS - DEBES CUMPLIRLAS AL 100%:
-        1. Debes seleccionar **EXACTAMENTE DOS PRENDAS en total**.  
-        2. La PRIMERA línea DEBE ser el ID de una prenda con categoría **"superior"**.  
-        3. La SEGUNDA línea DEBE ser el ID de una prenda con categoría **"inferior"**.  
-        4. NUNCA devuelvas dos prendas de la misma categoría (ni dos superiores, ni dos inferiores).
-        5. Revisa bien el campo "categoría" de cada prenda antes de seleccionarla.
-        6. Prioriza prendas cuyo campo 'ocasiones' incluya la ocasión solicitada o sea compatible.  
-        7. Asegúrate de que ambas prendas sean coherentes en estilo y color.  
-        8. SOLO devuelve los IDs, sin texto adicional, sin explicaciones, sin guiones, sin numeración.
+        El usuario necesita una recomendación para la ocasión: "{ocasion}".
 
-        📌 FORMATO DE RESPUESTA (OBLIGATORIO):
-        Línea 1: ID de UNA prenda superior
-        Línea 2: ID de UNA prenda inferior
+        =========================
+        ### REGLAS OBLIGATORIAS
+        Debes cumplir TODAS las siguientes reglas sin excepción:
 
-        Ejemplo correcto:
-        688a7fd9225a99c1b7dfc86f
-        688a8095225a99c1b7dfc870
+        1. Selecciona EXACTAMENTE **dos prendas**.
+        2. La primera prenda DEBE tener categoría **"superior"**.
+        3. La segunda prenda DEBE tener categoría **"inferior"**.
+        4. No puedes devolver dos superiores ni dos inferiores.
+        5. Las prendas deben tener estilo compatible entre sí.
+        6. Si existe una prenda con ocasión que coincida con "{ocasion}", debes priorizarla.
+        7. Si no existe coincidencia exacta, selecciona la opción más compatible.
+        8. Tu respuesta NO debe incluir explicaciones, texto adicional, descripciones ni comentarios.
+        9. **SOLO** debes imprimir los IDs, uno por línea, en este orden:
+        - Línea 1: id de la prenda superior
+        - Línea 2: id de la prenda inferior
 
-        Ahora proporciona tu recomendación (solo dos IDs, uno por línea):
+        =========================
+        ### FORMATO DE RESPUESTA (OBLIGATORIO)
+
+        <id_superior>
+        <id_inferior>
+
+        Sin guiones, sin comillas, sin palabras, sin nada más.
+
+        Ahora genera la recomendación.
         """
         return prompt
-    
-    @staticmethod 
+
+    @staticmethod
     async def obtener_recomendacion(prompt: str):
         response = await openai_client.chat.completions.create(
             model="gpt-4o-mini",
@@ -60,7 +74,7 @@ class RecomendacionService:
             max_tokens=50
         )
         contenido = response.choices[0].message.content.strip()
-        return contenido    
+        return contenido
 
     @staticmethod
     async def generar_recomendacion(usuarioId: PydanticObjectId, ocasion: str):
@@ -68,36 +82,45 @@ class RecomendacionService:
         try:
             prendas_usuario = await PrendaService.find_prenda_by_usuario_id(usuarioId)
         except Exception:
-            raise Exception("No es posible generar una recomendación porque el usuario no tiene prendas registradas.")
-        
+            raise Exception(
+                "No es posible generar una recomendación porque el usuario no tiene prendas registradas.")
+
         # Validar cantidad mínima
-        superiores = [p for p in prendas_usuario if p.tipoPrendaId.categoria.lower() == "superior"]
-        inferiores = [p for p in prendas_usuario if p.tipoPrendaId.categoria.lower() == "inferior"]
+        superiores = [
+            p for p in prendas_usuario if p.tipoPrendaId.categoria.lower() == "superior"]
+        inferiores = [
+            p for p in prendas_usuario if p.tipoPrendaId.categoria.lower() == "inferior"]
 
         if len(superiores) < 2 or len(inferiores) < 2:
-            raise Exception("Debes tener al menos 2 prendas superiores y 2 prendas inferiores para generar una recomendación.")
+            raise Exception(
+                "Debes tener al menos 2 prendas superiores y 2 prendas inferiores para generar una recomendación.")
 
-        #Generar prompt y obtener IDs sugeridos
+        # Generar prompt y obtener IDs sugeridos
         prompt = await RecomendacionService.prompt(prendas_usuario, ocasion)
         respuesta = await RecomendacionService.obtener_recomendacion(prompt)
 
-        ids_sugeridos = {line.strip("-•* ").strip() for line in respuesta.splitlines() if line.strip()}
+        ids_sugeridos = {line.strip("-•* ").strip()
+                         for line in respuesta.splitlines() if line.strip()}
 
-        #Filtro por prendas sugeridas
-        prendas_sugeridas = [p for p in prendas_usuario if str(p.id) in ids_sugeridos]
+        # Filtro por prendas sugeridas
+        prendas_sugeridas = [
+            p for p in prendas_usuario if str(p.id) in ids_sugeridos]
         if not prendas_sugeridas:
-            raise Exception("Las prendas sugeridas no existen para este usuario")
-        
+            raise Exception(
+                "Las prendas sugeridas no existen para este usuario")
+
         # ✅ VALIDACIÓN CRÍTICA: Verificar que haya 1 superior y 1 inferior
-        superiores_sugeridas = [p for p in prendas_sugeridas if p.tipoPrendaId.categoria.lower() == "superior"]
-        inferiores_sugeridas = [p for p in prendas_sugeridas if p.tipoPrendaId.categoria.lower() == "inferior"]
+        superiores_sugeridas = [
+            p for p in prendas_sugeridas if p.tipoPrendaId.categoria.lower() == "superior"]
+        inferiores_sugeridas = [
+            p for p in prendas_sugeridas if p.tipoPrendaId.categoria.lower() == "inferior"]
 
         # Si la IA falló, corregir manualmente
         if len(superiores_sugeridas) != 1 or len(inferiores_sugeridas) != 1:
             # Tomar la primera/mejor superior e inferior disponibles que coincidan con la ocasión
             prenda_superior = None
             prenda_inferior = None
-            
+
             # Buscar prendas que mencionen la ocasión
             for p in superiores:
                 if ocasion.lower() in [oc.lower() for oc in p.ocasiones]:
@@ -105,20 +128,20 @@ class RecomendacionService:
                     break
             if not prenda_superior:
                 prenda_superior = superiores[0]  # Fallback: primera disponible
-            
+
             for p in inferiores:
                 if ocasion.lower() in [oc.lower() for oc in p.ocasiones]:
                     prenda_inferior = p
                     break
             if not prenda_inferior:
                 prenda_inferior = inferiores[0]  # Fallback: primera disponible
-            
+
             prendas_sugeridas = [prenda_superior, prenda_inferior]
 
         return prendas_sugeridas
-    
-    async def guardar_recomendacion(usuarioId:PydanticObjectId, ocasion: str):
-        
+
+    async def guardar_recomendacion(usuarioId: PydanticObjectId, ocasion: str):
+
         prendas_sugeridas_guardar = await RecomendacionService.generar_recomendacion(usuarioId, ocasion)
 
         vestuario = Vestuario(
@@ -131,7 +154,7 @@ class RecomendacionService:
         recomendacion = Recomendacion(
             usuarioId=usuarioId,
             ocasion=ocasion,
-            vestuarioSugerido= vestuario.id,
+            vestuarioSugerido=vestuario.id,
             fechaCreado=datetime.datetime.now()
         )
         await RecomendacionRepository.create_recomendacion(recomendacion)
@@ -146,6 +169,6 @@ class RecomendacionService:
                     "color:": p.color,
                     "categoría": p.tipoPrendaId.categoria,
                     "imagen": p.imagen,
-                } for p in  prendas_sugeridas_guardar
+                } for p in prendas_sugeridas_guardar
             ]
         }
