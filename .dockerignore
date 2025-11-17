@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+.envOutfitForYou/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Jupyter Notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Testing
+tests/
+test_*.py
+*_test.py
+
+# Data files (si tienes datasets de entrenamiento)
+data/
+datasets/
+*.csv
+*.json
+*.xml
+
+# Model training artifacts (si guardas checkpoints temporales)
+logs/
+checkpoints/
+tensorboard/
+training_outputs/
+
+# Media files de prueba (si tienes)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.mp4
+*.avi
+
+# Otros
+.cache/
+tmp/
+temp/
+*.tmp
